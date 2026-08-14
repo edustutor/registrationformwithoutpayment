@@ -396,7 +396,7 @@ Here are my details:
                 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label htmlFor="parentName" className="block text-sm font-bold text-slate-700">{t.parentNameLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
+                    <label htmlFor="parentName" className="block text-sm font-bold text-slate-700">{t.parentNameLabel}</label>
                     <input 
                       id="parentName" 
                       type="text"
@@ -408,7 +408,7 @@ Here are my details:
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="parentPhone" className="block text-sm font-bold text-slate-700">{t.phoneLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
+                    <label htmlFor="parentPhone" className="block text-sm font-bold text-slate-700">{t.phoneLabel}</label>
                     <input 
                       id="parentPhone" 
                       type="tel"
@@ -423,7 +423,7 @@ Here are my details:
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="address" className="block text-sm font-bold text-slate-700">{t.addressLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
+                    <label htmlFor="address" className="block text-sm font-bold text-slate-700">{t.addressLabel}</label>
                     <input 
                       id="address" 
                       type="text"
@@ -434,7 +434,7 @@ Here are my details:
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="district" className="block text-sm font-bold text-slate-700">{t.districtLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
+                    <label htmlFor="district" className="block text-sm font-bold text-slate-700">{t.districtLabel}</label>
                     <input 
                       id="district" 
                       type="text"
