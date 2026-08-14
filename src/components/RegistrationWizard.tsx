@@ -204,6 +204,9 @@ Here are my details:
                       type="tel"
                       placeholder={t.phonePlaceholder} 
                       {...form.register("studentPhone")}
+                      onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
+                      }}
                       className="h-14 text-lg bg-slate-50/50 border-slate-200 focus-visible:ring-blue-500 rounded-2xl shadow-sm"
                     />
                     {errors.studentPhone && <p className="text-sm font-medium text-red-500">{errors.studentPhone.message}</p>}
@@ -391,6 +394,9 @@ Here are my details:
                       type="tel"
                       placeholder={t.phonePlaceholder} 
                       {...form.register("parentPhone")}
+                      onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
+                      }}
                       className="h-14 text-lg bg-slate-50/50 border-slate-200 focus-visible:ring-blue-500 rounded-2xl shadow-sm"
                     />
                     {errors.parentPhone && <p className="text-sm font-medium text-red-500">{errors.parentPhone.message}</p>}
