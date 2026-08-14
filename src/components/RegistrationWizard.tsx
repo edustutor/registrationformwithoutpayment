@@ -111,22 +111,7 @@ Here are my details:
       {/* Confetti animation for success step */}
       {step === 4 && <Confetti width={width} height={height} numberOfPieces={500} recycle={false} />}
       
-      <div className="flex justify-center mb-6">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white/50 backdrop-blur-md p-4 rounded-3xl shadow-xl shadow-blue-500/10 border border-white/40"
-        >
-          <Image 
-            src="/edus_logo_blue.webp" 
-            alt="EDUS Logo" 
-            width={160} 
-            height={60} 
-            className="object-contain"
-            priority
-          />
-        </motion.div>
-      </div>
+
 
       <Card className="border border-white/40 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] bg-white/80 backdrop-blur-2xl rounded-3xl overflow-hidden">
         
@@ -154,8 +139,15 @@ Here are my details:
                 exit={{ opacity: 0, y: -30 }}
                 className="py-12 flex flex-col items-center justify-center text-center"
               >
-                <div className="w-24 h-24 bg-gradient-to-tr from-blue-200 to-indigo-100 text-blue-600 rounded-full flex items-center justify-center mb-8 shadow-inner border border-white">
-                  <Student size={56} weight="duotone" />
+                <div className="mb-8 flex justify-center">
+                  <Image 
+                    src="/edus_logo_blue.webp" 
+                    alt="EDUS Logo" 
+                    width={200} 
+                    height={80} 
+                    className="object-contain"
+                    priority
+                  />
                 </div>
                 <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700 mb-4 tracking-tight">
                   Welcome to EDUS
