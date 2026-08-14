@@ -100,15 +100,15 @@ Here are my details:
   const isOtherSyllabus = values.syllabus === "Cambridge" || values.syllabus === "Edexcel";
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-8 px-4 relative">
+    <div className="w-full max-w-2xl mx-auto py-6 px-3 sm:py-12 sm:px-6 relative min-h-[100dvh] flex flex-col justify-center font-sans safe-p-bottom">
       {/* Confetti animation for success step */}
       {step === 4 && <Confetti width={width} height={height} numberOfPieces={500} recycle={false} />}
       
-      <div className="border border-white/40 shadow-xl bg-white/80 backdrop-blur-2xl rounded-3xl overflow-hidden">
+      <div className="border border-white/50 shadow-2xl bg-white/90 backdrop-blur-3xl rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden">
         
         {/* Playful Progress Bar */}
         {step > 0 && step < 4 && (
-          <div className="w-full bg-slate-100 h-2">
+          <div className="w-full bg-slate-100/50 h-1.5 sm:h-2">
             <motion.div 
               className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-full rounded-r-full"
               initial={{ width: `${((step - 1) / 3) * 100}%` }}
@@ -118,7 +118,7 @@ Here are my details:
           </div>
         )}
 
-        <div className="p-6 sm:p-10">
+        <div className="p-6 sm:p-12">
           <AnimatePresence mode="wait">
             
             {/* STEP 0: LANGUAGE SELECTION */}
@@ -128,34 +128,34 @@ Here are my details:
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -30 }}
-                className="py-12 flex flex-col items-center justify-center text-center"
+                className="py-10 sm:py-16 flex flex-col items-center justify-center text-center"
               >
-                <div className="mb-6 flex justify-center">
+                <div className="mb-8 flex justify-center">
                   <Image 
                     src="/edus_logo_blue.webp" 
                     alt="EDUS Logo" 
-                    width={180} 
-                    height={70} 
-                    className="object-contain"
+                    width={160} 
+                    height={65} 
+                    className="object-contain w-36 sm:w-44"
                     priority
                   />
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700 mb-3 tracking-tight">
+                <h1 className="text-3xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-700 to-indigo-800 mb-4 tracking-tight leading-tight">
                   Welcome to EDUS
                 </h1>
-                <p className="text-slate-500 mb-10 text-sm font-medium">Choose your preferred language to begin</p>
+                <p className="text-slate-500 mb-10 sm:mb-12 text-sm sm:text-base font-medium">Choose your preferred language to begin</p>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-sm sm:max-w-md">
                   <button 
                     type="button"
-                    className="flex items-center justify-center h-20 text-xl font-bold border-2 border-blue-100 bg-white hover:bg-blue-50 hover:border-blue-500 hover:text-blue-700 hover:shadow-lg hover:shadow-blue-500/10 transition-all rounded-2xl cursor-pointer"
+                    className="flex items-center justify-center min-h-[4rem] sm:min-h-[5rem] text-lg sm:text-xl font-bold border-2 border-blue-100 bg-white hover:bg-blue-50/50 hover:border-blue-500 hover:text-blue-700 hover:shadow-xl hover:shadow-blue-500/10 transition-all rounded-2xl sm:rounded-3xl cursor-pointer active:scale-[0.98]"
                     onClick={() => handleLanguageSelect("English")}
                   >
                     English
                   </button>
                   <button 
                     type="button"
-                    className="flex items-center justify-center h-20 text-xl font-bold border-2 border-indigo-100 bg-white hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 hover:shadow-lg hover:shadow-indigo-500/10 transition-all rounded-2xl cursor-pointer"
+                    className="flex items-center justify-center min-h-[4rem] sm:min-h-[5rem] text-lg sm:text-xl font-bold border-2 border-indigo-100 bg-white hover:bg-indigo-50/50 hover:border-indigo-500 hover:text-indigo-700 hover:shadow-xl hover:shadow-indigo-500/10 transition-all rounded-2xl sm:rounded-3xl cursor-pointer active:scale-[0.98]"
                     onClick={() => handleLanguageSelect("Tamil")}
                   >
                     தமிழ்
@@ -172,26 +172,26 @@ Here are my details:
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <div className="pb-6 text-center sm:text-left">
-                  <h2 className="text-2xl font-bold text-slate-800">{t.studentDetailsTitle}</h2>
-                  <p className="text-sm font-medium text-slate-500 mt-1">{t.studentDetailsDesc}</p>
+                <div className="pb-8 text-center sm:text-left">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">{t.studentDetailsTitle}</h2>
+                  <p className="text-sm sm:text-base font-medium text-slate-500 mt-2">{t.studentDetailsDesc}</p>
                 </div>
                 
-                <div className="space-y-5">
+                <div className="space-y-6">
                   <div className="space-y-2">
-                    <label htmlFor="studentName" className="block text-sm font-semibold text-slate-700">{t.fullNameLabel} <span className="text-red-500">*</span></label>
+                    <label htmlFor="studentName" className="block text-sm font-bold text-slate-700">{t.fullNameLabel} <span className="text-red-500">*</span></label>
                     <input 
                       id="studentName" 
                       type="text"
                       placeholder={t.fullNamePlaceholder} 
                       {...form.register("studentName")}
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm"
+                      className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm placeholder:text-slate-400"
                     />
-                    {errors.studentName && <p className="text-xs font-medium text-red-500">{errors.studentName.message}</p>}
+                    {errors.studentName && <p className="text-xs font-semibold text-red-500 ml-1">{errors.studentName.message}</p>}
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="studentPhone" className="block text-sm font-semibold text-slate-700">{t.phoneLabel} <span className="text-red-500">*</span></label>
+                    <label htmlFor="studentPhone" className="block text-sm font-bold text-slate-700">{t.phoneLabel} <span className="text-red-500">*</span></label>
                     <input 
                       id="studentPhone" 
                       type="tel"
@@ -200,31 +200,31 @@ Here are my details:
                       onInput={(e) => {
                         e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
                       }}
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm"
+                      className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm placeholder:text-slate-400"
                     />
-                    {errors.studentPhone && <p className="text-xs font-medium text-red-500">{errors.studentPhone.message}</p>}
+                    {errors.studentPhone && <p className="text-xs font-semibold text-red-500 ml-1">{errors.studentPhone.message}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="school" className="block text-sm font-semibold text-slate-700">{t.schoolLabel} <span className="text-slate-400 font-normal">{t.optionalText}</span></label>
+                    <label htmlFor="school" className="block text-sm font-bold text-slate-700">{t.schoolLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
                     <input 
                       id="school" 
                       type="text"
                       placeholder={t.schoolPlaceholder} 
                       {...form.register("school")}
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm"
+                      className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm placeholder:text-slate-400"
                     />
                   </div>
                 </div>
                 
-                <div className="pt-8 flex flex-col-reverse sm:flex-row gap-3 justify-between">
-                  <button type="button" onClick={prevStep} className="flex items-center justify-center w-full sm:w-auto px-6 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors">
+                <div className="pt-10 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 justify-between">
+                  <button type="button" onClick={prevStep} className="flex items-center justify-center w-full sm:w-auto px-6 min-h-[3.5rem] text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 rounded-2xl transition-colors active:scale-[0.98]">
                     <CaretLeft className="mr-1.5" weight="bold" /> {t.backBtn}
                   </button>
                   <button 
                     type="button"
                     onClick={() => nextStep(["studentName", "studentPhone"])}
-                    className="flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl text-sm font-bold text-white shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
                   >
                     {t.continueBtn} <CaretRight className="ml-1.5" weight="bold" />
                   </button>
@@ -240,58 +240,73 @@ Here are my details:
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <div className="pb-6 text-center sm:text-left">
-                  <h2 className="text-2xl font-bold text-slate-800">{t.academicTitle}</h2>
-                  <p className="text-sm font-medium text-slate-500 mt-1">{t.academicDesc}</p>
+                <div className="pb-8 text-center sm:text-left">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">{t.academicTitle}</h2>
+                  <p className="text-sm sm:text-base font-medium text-slate-500 mt-2">{t.academicDesc}</p>
                 </div>
                 
-                <div className="space-y-5">
+                <div className="space-y-6">
                   <div className="space-y-2">
-                    <label htmlFor="syllabus" className="block text-sm font-semibold text-slate-700">{t.syllabusLabel} <span className="text-red-500">*</span></label>
-                    <select 
-                      id="syllabus"
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:0.65em_auto]"
-                      value={values.syllabus || ""}
-                      onChange={(e) => setValue("syllabus", e.target.value || undefined)}
-                    >
-                      <option value="" disabled hidden>{t.syllabusPlaceholder}</option>
-                      {SYLLABUS_OPTIONS.map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                    <label htmlFor="syllabus" className="block text-sm font-bold text-slate-700">{t.syllabusLabel} <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <select 
+                        id="syllabus"
+                        className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm appearance-none cursor-pointer"
+                        value={values.syllabus || ""}
+                        onChange={(e) => setValue("syllabus", e.target.value || undefined)}
+                      >
+                        <option value="" disabled hidden>{t.syllabusPlaceholder}</option>
+                        {SYLLABUS_OPTIONS.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none text-slate-400">
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                      </div>
+                    </div>
                   </div>
 
                   {values.syllabus && (
                     <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label htmlFor="grade" className="block text-sm font-semibold text-slate-700">{t.gradeLabel} <span className="text-red-500">*</span></label>
-                          <select 
-                            id="grade"
-                            className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:0.65em_auto]"
-                            value={values.grade || ""}
-                            onChange={(e) => { setValue("grade", e.target.value || undefined); setValue("subjects", []); }}
-                          >
-                            <option value="" disabled hidden>{t.gradePlaceholder}</option>
-                            {GRADE_OPTIONS.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
+                          <label htmlFor="grade" className="block text-sm font-bold text-slate-700">{t.gradeLabel} <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <select 
+                              id="grade"
+                              className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm appearance-none cursor-pointer"
+                              value={values.grade || ""}
+                              onChange={(e) => { setValue("grade", e.target.value || undefined); setValue("subjects", []); }}
+                            >
+                              <option value="" disabled hidden>{t.gradePlaceholder}</option>
+                              {GRADE_OPTIONS.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none text-slate-400">
+                              <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                            </div>
+                          </div>
                         </div>
 
                         <div className="space-y-2">
-                          <label htmlFor="medium" className="block text-sm font-semibold text-slate-700">{t.mediumLabel} <span className="text-red-500">*</span></label>
-                          <select 
-                            id="medium"
-                            className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:0.65em_auto]"
-                            value={values.medium || ""}
-                            onChange={(e) => { setValue("medium", e.target.value || undefined); setValue("subjects", []); }}
-                          >
-                            <option value="" disabled hidden>{t.mediumPlaceholder}</option>
-                            {MEDIUM_OPTIONS.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
+                          <label htmlFor="medium" className="block text-sm font-bold text-slate-700">{t.mediumLabel} <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <select 
+                              id="medium"
+                              className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm appearance-none cursor-pointer"
+                              value={values.medium || ""}
+                              onChange={(e) => { setValue("medium", e.target.value || undefined); setValue("subjects", []); }}
+                            >
+                              <option value="" disabled hidden>{t.mediumPlaceholder}</option>
+                              {MEDIUM_OPTIONS.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none text-slate-400">
+                              <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -299,17 +314,17 @@ Here are my details:
                       {isOtherSyllabus ? (
                         <motion.div 
                           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                          className="bg-blue-50/80 border border-blue-100 rounded-2xl p-5 text-blue-800"
+                          className="bg-blue-50/50 border-2 border-blue-100 rounded-2xl p-5 text-blue-800"
                         >
-                          <p className="font-semibold text-sm mb-1">{t.customReqTitle}</p>
-                          <p className="text-blue-700/80 text-xs">
+                          <p className="font-bold text-sm mb-1">{t.customReqTitle}</p>
+                          <p className="text-blue-700/80 text-sm leading-relaxed">
                             {t.customReqDesc(values.syllabus)}
                           </p>
                         </motion.div>
                       ) : (
                         availableSubjects.length > 0 && (
-                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-3">
-                            <label className="block text-sm font-semibold text-slate-700">{t.selectSubjectsLabel}</label>
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-4">
+                            <label className="block text-sm font-bold text-slate-700">{t.selectSubjectsLabel}</label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                               {availableSubjects.map((subject) => (
                                 <Controller
@@ -318,7 +333,7 @@ Here are my details:
                                   name="subjects"
                                   render={({ field }) => {
                                     return (
-                                      <label className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer transition-colors shadow-sm">
+                                      <label className="flex items-center space-x-3 bg-white p-4 sm:p-3 rounded-2xl sm:rounded-xl border-2 border-slate-100 hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer transition-all shadow-sm active:scale-[0.98]">
                                         <input 
                                           type="checkbox"
                                           checked={field.value?.includes(subject)}
@@ -327,9 +342,9 @@ Here are my details:
                                               ? field.onChange([...(field.value || []), subject])
                                               : field.onChange(field.value?.filter((value) => value !== subject))
                                           }}
-                                          className="w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 rounded focus:ring-indigo-500 focus:ring-2 accent-indigo-600"
+                                          className="w-5 h-5 sm:w-4 sm:h-4 text-indigo-600 bg-slate-50 border-slate-300 rounded focus:ring-indigo-500 focus:ring-2 focus:ring-offset-1 accent-indigo-600 transition-all"
                                         />
-                                        <span className="text-sm font-medium text-slate-700 select-none">
+                                        <span className="text-base sm:text-sm font-semibold text-slate-700 select-none">
                                           {subject}
                                         </span>
                                       </label>
@@ -345,8 +360,8 @@ Here are my details:
                   )}
                 </div>
                 
-                <div className="pt-8 flex flex-col-reverse sm:flex-row gap-3 justify-between">
-                  <button type="button" onClick={prevStep} className="flex items-center justify-center w-full sm:w-auto px-6 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors">
+                <div className="pt-10 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 justify-between">
+                  <button type="button" onClick={prevStep} className="flex items-center justify-center w-full sm:w-auto px-6 min-h-[3.5rem] text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 rounded-2xl transition-colors active:scale-[0.98]">
                     <CaretLeft className="mr-1.5" weight="bold" /> {t.backBtn}
                   </button>
                   <button 
@@ -358,7 +373,7 @@ Here are my details:
                       }
                       nextStep();
                     }}
-                    className="flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl text-sm font-bold text-white shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
                   >
                     {t.continueBtn} <CaretRight className="ml-1.5" weight="bold" />
                   </button>
@@ -374,26 +389,26 @@ Here are my details:
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <div className="pb-6 text-center sm:text-left">
-                  <h2 className="text-2xl font-bold text-slate-800">{t.parentTitle}</h2>
-                  <p className="text-sm font-medium text-slate-500 mt-1">{t.parentDesc}</p>
+                <div className="pb-8 text-center sm:text-left">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">{t.parentTitle}</h2>
+                  <p className="text-sm sm:text-base font-medium text-slate-500 mt-2">{t.parentDesc}</p>
                 </div>
                 
-                <div className="space-y-5">
+                <div className="space-y-6">
                   <div className="space-y-2">
-                    <label htmlFor="parentName" className="block text-sm font-semibold text-slate-700">{t.parentNameLabel} <span className="text-slate-400 font-normal">{t.optionalText}</span></label>
+                    <label htmlFor="parentName" className="block text-sm font-bold text-slate-700">{t.parentNameLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
                     <input 
                       id="parentName" 
                       type="text"
                       placeholder={t.parentNamePlaceholder} 
                       {...form.register("parentName")}
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm"
+                      className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm placeholder:text-slate-400"
                     />
-                    {errors.parentName && <p className="text-xs font-medium text-red-500">{errors.parentName.message}</p>}
+                    {errors.parentName && <p className="text-xs font-semibold text-red-500 ml-1">{errors.parentName.message}</p>}
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="parentPhone" className="block text-sm font-semibold text-slate-700">{t.phoneLabel} <span className="text-slate-400 font-normal">{t.optionalText}</span></label>
+                    <label htmlFor="parentPhone" className="block text-sm font-bold text-slate-700">{t.phoneLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
                     <input 
                       id="parentPhone" 
                       type="tel"
@@ -402,42 +417,42 @@ Here are my details:
                       onInput={(e) => {
                         e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
                       }}
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm"
+                      className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm placeholder:text-slate-400"
                     />
-                    {errors.parentPhone && <p className="text-xs font-medium text-red-500">{errors.parentPhone.message}</p>}
+                    {errors.parentPhone && <p className="text-xs font-semibold text-red-500 ml-1">{errors.parentPhone.message}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="address" className="block text-sm font-semibold text-slate-700">{t.addressLabel} <span className="text-slate-400 font-normal">{t.optionalText}</span></label>
+                    <label htmlFor="address" className="block text-sm font-bold text-slate-700">{t.addressLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
                     <input 
                       id="address" 
                       type="text"
                       placeholder={t.addressPlaceholder} 
                       {...form.register("address")}
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm"
+                      className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm placeholder:text-slate-400"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="district" className="block text-sm font-semibold text-slate-700">{t.districtLabel} <span className="text-slate-400 font-normal">{t.optionalText}</span></label>
+                    <label htmlFor="district" className="block text-sm font-bold text-slate-700">{t.districtLabel} <span className="text-slate-400 font-medium ml-1">{t.optionalText}</span></label>
                     <input 
                       id="district" 
                       type="text"
                       placeholder={t.districtPlaceholder} 
                       {...form.register("district")}
-                      className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-xl transition-shadow shadow-sm"
+                      className="w-full text-base sm:text-sm px-5 min-h-[3.5rem] bg-slate-50/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 rounded-2xl transition-all shadow-sm placeholder:text-slate-400"
                     />
                   </div>
                 </div>
                 
-                <div className="pt-8 flex flex-col-reverse sm:flex-row gap-3 justify-between">
-                  <button type="button" onClick={prevStep} className="flex items-center justify-center w-full sm:w-auto px-6 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors">
+                <div className="pt-10 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 justify-between">
+                  <button type="button" onClick={prevStep} className="flex items-center justify-center w-full sm:w-auto px-6 min-h-[3.5rem] text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 rounded-2xl transition-colors active:scale-[0.98]">
                     <CaretLeft className="mr-1.5" weight="bold" /> {t.backBtn}
                   </button>
                   <button 
                     type="button"
                     onClick={() => nextStep(["parentName", "parentPhone"])}
-                    className="flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 rounded-xl text-sm font-bold text-white shadow-md shadow-green-500/20 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98]"
                   >
                     {t.submitBtn} <Check className="ml-1.5" weight="bold" />
                   </button>
@@ -454,34 +469,34 @@ Here are my details:
                 transition={{ type: "spring", bounce: 0.5 }}
                 className="py-10 flex flex-col items-center justify-center text-center relative"
               >
-                <div className="w-20 h-20 bg-gradient-to-br from-green-300 to-emerald-500 text-white rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/20 border-4 border-white z-10">
-                  <Check size={40} weight="bold" />
+                <div className="w-24 h-24 sm:w-20 sm:h-20 bg-gradient-to-br from-green-300 to-emerald-500 text-white rounded-full flex items-center justify-center mb-8 sm:mb-6 shadow-xl shadow-green-500/20 border-4 border-white z-10">
+                  <Check size={48} weight="bold" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-700 to-emerald-700 mb-3 z-10">
+                <h2 className="text-3xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-green-700 to-emerald-800 mb-3 z-10 tracking-tight">
                   {t.successTitle}
                 </h2>
-                <p className="text-slate-500 mb-8 text-sm max-w-sm leading-relaxed z-10">
+                <p className="text-slate-500 mb-10 text-base sm:text-sm max-w-sm leading-relaxed z-10">
                   {t.successDesc}
                 </p>
                 
-                <div className="w-full max-w-xs space-y-4 z-10">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t.contactTitle}</div>
+                <div className="w-full max-w-sm sm:max-w-xs space-y-4 z-10">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.contactTitle}</div>
                   
                   <a href={generateWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="block">
-                    <button type="button" className="flex items-center justify-center w-full h-12 text-sm font-bold bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-md shadow-[#25D366]/20 rounded-xl transition-transform active:scale-[0.98] cursor-pointer">
-                      <WhatsappLogo size={20} weight="fill" className="mr-2" />
+                    <button type="button" className="flex items-center justify-center w-full min-h-[3.5rem] text-sm sm:text-base font-bold bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg shadow-[#25D366]/25 rounded-2xl transition-transform active:scale-[0.98] cursor-pointer">
+                      <WhatsappLogo size={24} weight="fill" className="mr-2" />
                       {t.sendWhatsapp}
                     </button>
                   </a>
                   
                   <a href="tel:+94707072072" className="block">
-                    <button type="button" className="flex items-center justify-center w-full h-12 text-sm font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 rounded-xl transition-transform active:scale-[0.98] cursor-pointer">
-                      <PhoneCall size={20} weight="fill" className="mr-2" />
+                    <button type="button" className="flex items-center justify-center w-full min-h-[3.5rem] text-sm sm:text-base font-bold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 rounded-2xl transition-transform active:scale-[0.98] cursor-pointer">
+                      <PhoneCall size={24} weight="fill" className="mr-2" />
                       {t.callUs} +94 70 707 2072
                     </button>
                   </a>
 
-                  <div className="flex justify-center pt-4">
+                  <div className="flex justify-center pt-6">
                     <button 
                       type="button"
                       onClick={() => {
@@ -501,9 +516,9 @@ Here are my details:
                         });
                         setStep(1);
                       }}
-                      className="flex items-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 font-semibold text-xs h-10 px-4 rounded-xl transition-colors cursor-pointer"
+                      className="flex items-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 font-bold text-sm h-12 px-6 rounded-2xl transition-colors cursor-pointer active:scale-[0.98]"
                     >
-                      <PlusCircle size={18} weight="fill" className="mr-1.5" />
+                      <PlusCircle size={20} weight="fill" className="mr-2" />
                       {t.newRegistration}
                     </button>
                   </div>
