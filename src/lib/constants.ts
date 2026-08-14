@@ -1,4 +1,4 @@
-export const SYLLABUS_OPTIONS = ["National", "Cambridge", "Edexcel"];
+export const SYLLABUS_OPTIONS = ["Sri Lankan National Syllabus", "Cambridge", "Edexcel"];
 export const MEDIUM_OPTIONS = ["Tamil Medium (TM)", "English Medium (EM)"];
 
 export const GRADE_OPTIONS = [
