@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Check, CaretRight, CaretLeft, WhatsappLogo, PhoneCall, Student } from "@phosphor-icons/react";
+import { Check, CaretRight, CaretLeft, WhatsappLogo, PhoneCall, Student, PlusCircle } from "@phosphor-icons/react";
 import Image from "next/image";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
@@ -36,8 +36,8 @@ const schema = z.object({
   subjects: z.array(z.string()).optional(),
 
   // Parent Details
-  parentName: z.string().min(2, "Name must be at least 2 characters").optional(),
-  parentPhone: z.string().regex(/^[0-9]+$/, "Must contain numbers only").optional(),
+  parentName: z.union([z.literal(""), z.string().min(2, "Name must be at least 2 characters")]).optional(),
+  parentPhone: z.union([z.literal(""), z.string().regex(/^[0-9]+$/, "Must contain numbers only")]).optional(),
   address: z.string().optional(),
   district: z.string().optional(),
 });
@@ -377,7 +377,7 @@ Here are my details:
                 </CardHeader>
                 <CardContent className="space-y-6 px-0">
                   <div className="space-y-3">
-                    <Label htmlFor="parentName" className="text-base font-semibold text-slate-700">{t.parentNameLabel} <span className="text-red-500">*</span></Label>
+                    <Label htmlFor="parentName" className="text-base font-semibold text-slate-700">{t.parentNameLabel} <span className="text-slate-400 font-normal">{t.optionalText}</span></Label>
                     <Input 
                       id="parentName" 
                       placeholder={t.parentNamePlaceholder} 
@@ -388,7 +388,7 @@ Here are my details:
                   </div>
                   
                   <div className="space-y-3">
-                    <Label htmlFor="parentPhone" className="text-base font-semibold text-slate-700">{t.phoneLabel} <span className="text-red-500">*</span></Label>
+                    <Label htmlFor="parentPhone" className="text-base font-semibold text-slate-700">{t.phoneLabel} <span className="text-slate-400 font-normal">{t.optionalText}</span></Label>
                     <Input 
                       id="parentPhone" 
                       type="tel"
@@ -460,7 +460,7 @@ Here are my details:
                 <div className="w-full max-w-md space-y-5 z-10">
                   <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">{t.contactTitle}</div>
                   
-                  <a href={generateWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="block">
+                  <a href={generateWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="block mb-4">
                     <Button className="w-full h-16 text-xl font-bold bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-xl shadow-[#25D366]/30 rounded-2xl transition-transform hover:scale-[1.02]">
                       <WhatsappLogo size={32} weight="fill" className="mr-3" />
                       {t.sendWhatsapp}
@@ -473,6 +473,33 @@ Here are my details:
                       {t.callUs} +94 70 707 2072
                     </Button>
                   </a>
+
+                  <div className="flex justify-center mt-6">
+                    <Button 
+                      variant="ghost"
+                      onClick={() => {
+                        form.reset({
+                          studentName: "",
+                          studentPhone: "",
+                          school: "",
+                          syllabus: "",
+                          grade: "",
+                          medium: "",
+                          subjects: [],
+                          parentName: "",
+                          parentPhone: "",
+                          address: "",
+                          district: "",
+                          language: form.getValues("language")
+                        });
+                        setStep(1);
+                      }}
+                      className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 font-semibold h-12 px-6 rounded-2xl"
+                    >
+                      <PlusCircle size={24} weight="fill" className="mr-2" />
+                      {t.newRegistration}
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             )}

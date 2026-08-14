@@ -43,6 +43,7 @@ export type LocaleData = {
   contactTitle: string;
   sendWhatsapp: string;
   callUs: string;
+  newRegistration: string;
 };
 
 export const locales: Record<string, LocaleData> = {
@@ -87,6 +88,7 @@ export const locales: Record<string, LocaleData> = {
     contactTitle: "Contact Us Now",
     sendWhatsapp: "Send via WhatsApp",
     callUs: "Call",
+    newRegistration: "New Registration",
   },
   Tamil: {
     studentDetailsTitle: "மாணவர் விவரங்கள்",
@@ -129,5 +131,6 @@ export const locales: Record<string, LocaleData> = {
     contactTitle: "இப்போது எங்களை தொடர்புகொள்ளவும்",
     sendWhatsapp: "WhatsApp மூலம் அனுப்பவும்",
     callUs: "அழைக்க",
+    newRegistration: "புதிய பதிவு"
   }
 };
