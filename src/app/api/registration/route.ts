@@ -92,7 +92,7 @@ export async function POST(req: Request) {
           `Address: ${values.address || 'N/A'}`,
           `District: ${values.district || 'N/A'}`,
           `Language: ${values.language || 'English'}`
-        ].join('\\n');
+        ].join('\n');
 
         const leadData = new URLSearchParams({
           name: values.studentName || 'New Registration',
