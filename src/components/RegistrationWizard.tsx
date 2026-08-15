@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Check, CaretRight, CaretLeft, WhatsappLogo, PhoneCall, PlusCircle } from "@phosphor-icons/react";
+import { Check, CaretRight, CaretLeft, WhatsappLogo, PhoneCall, PlusCircle, WarningCircle } from "@phosphor-icons/react";
 import Image from "next/image";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
@@ -39,6 +39,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function RegistrationWizard() {
   const [step, setStep] = useState(0);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const { width, height } = useWindowSize();
 
   const form = useForm<FormData>({
@@ -368,7 +369,7 @@ Here are my details:
                     type="button"
                     onClick={() => {
                       if (!values.syllabus || !values.grade || !values.medium) {
-                        alert(t.selectSyllabusAlert);
+                        setAlertMessage(t.selectSyllabusAlert);
                         return;
                       }
                       nextStep();
@@ -529,6 +530,35 @@ Here are my details:
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Custom Alert Modal */}
+      <AnimatePresence>
+        {alertMessage && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-[2rem] shadow-2xl p-6 sm:p-8 max-w-sm w-full border border-slate-100 flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-5">
+                <WarningCircle size={32} weight="fill" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2 tracking-tight">Almost there</h3>
+              <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+                {alertMessage}
+              </p>
+              <button
+                type="button"
+                onClick={() => setAlertMessage(null)}
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold min-h-[3.5rem] rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-slate-900/20"
+              >
+                Okay
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
