@@ -45,32 +45,24 @@ export async function POST(req: Request) {
       Status: step === 3 ? "Completed" : `Step ${step}`,
     };
 
-    if (step === 1) {
-      // Step 1: Create a new row
+    const rows = await sheet.getRows();
+    const existingRow = rows.find(r => r.get('SessionId') === sessionId);
+
+    if (existingRow) {
+      // Update the existing row (handles Step > 1, or Step 1 if they clicked 'Back' and then 'Continue' again)
+      existingRow.assign(rowData);
+      await existingRow.save();
+    } else {
+      // Create a new row if it doesn't exist
       try {
         await sheet.addRow(rowData);
       } catch (e: any) {
-         // If headers are missing, the addRow will fail. 
-         // Let's try to set headers if they don't exist
          if (e.message && e.message.includes('headerValues')) {
            await sheet.setHeaderRow(Object.keys(rowData));
            await sheet.addRow(rowData);
          } else {
            throw e;
          }
-      }
-    } else {
-      // Step > 1: Update existing row
-      const rows = await sheet.getRows();
-      const existingRow = rows.find(r => r.get('SessionId') === sessionId);
-
-      if (existingRow) {
-        // Update the row
-        existingRow.assign(rowData);
-        await existingRow.save();
-      } else {
-        // Fallback: If row somehow doesn't exist, create it
-        await sheet.addRow(rowData);
       }
     }
 
