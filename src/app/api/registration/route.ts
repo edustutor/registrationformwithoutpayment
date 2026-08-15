@@ -94,22 +94,22 @@ export async function POST(req: Request) {
           `Language: ${values.language || 'English'}`
         ].join('\\n');
 
-        const leadData = {
+        const leadData = new URLSearchParams({
           name: values.studentName || 'New Registration',
           phonenumber: values.studentPhone || '',
           assigned: "48",
           status: "12",
           source: "16",
           description: description
-        };
+        });
 
         const perfexRes = await fetch('https://crm.edustutor.com/api/leads', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
             'authtoken': process.env.PERFEX_API_TOKEN
           },
-          body: JSON.stringify(leadData)
+          body: leadData.toString()
         });
 
         if (!perfexRes.ok) {
