@@ -76,6 +76,51 @@ export async function POST(req: Request) {
       }
     }
 
+    // Step 3 (Final Submission): Add to Perfex CRM Leads
+    if (step === 3 && process.env.PERFEX_API_TOKEN) {
+      try {
+        const description = [
+          `Student Name: ${values.studentName || 'N/A'}`,
+          `Student Phone: ${values.studentPhone || 'N/A'}`,
+          `School: ${values.school || 'N/A'}`,
+          `Syllabus: ${values.syllabus || 'N/A'}`,
+          `Grade: ${values.grade || 'N/A'}`,
+          `Medium: ${values.medium || 'N/A'}`,
+          `Subjects: ${(values.subjects || []).join(', ') || 'N/A'}`,
+          `Parent Name: ${values.parentName || 'N/A'}`,
+          `Parent Phone: ${values.parentPhone || 'N/A'}`,
+          `Address: ${values.address || 'N/A'}`,
+          `District: ${values.district || 'N/A'}`,
+          `Language: ${values.language || 'English'}`
+        ].join('\\n');
+
+        const leadData = {
+          name: values.studentName || 'New Registration',
+          phonenumber: values.studentPhone || '',
+          assigned: "48",
+          status: "12",
+          source: "16",
+          description: description
+        };
+
+        const perfexRes = await fetch('https://crm.edustutor.com/api/leads', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'authtoken': process.env.PERFEX_API_TOKEN
+          },
+          body: JSON.stringify(leadData)
+        });
+
+        if (!perfexRes.ok) {
+          console.error("Perfex CRM API Error:", await perfexRes.text());
+        }
+      } catch (crmError) {
+        console.error("Failed to push to Perfex CRM:", crmError);
+        // We don't throw here to avoid blocking the user if CRM is down
+      }
+    }
+
     return NextResponse.json({ success: true, sessionId });
   } catch (error) {
     console.error("Google Sheets API Error:", error);
