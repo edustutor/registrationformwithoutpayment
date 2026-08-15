@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,7 +41,13 @@ type FormData = z.infer<typeof schema>;
 export default function RegistrationWizard() {
   const [step, setStep] = useState(0);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { width, height } = useWindowSize();
+
+  useEffect(() => {
+    setSessionId(uuidv4());
+  }, []);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -55,16 +62,36 @@ export default function RegistrationWizard() {
   
   const t = locales[values.language || "English"];
 
-  const nextStep = async (fieldsToValidate?: (keyof FormData)[]) => {
+  const handleStepSubmit = async (fieldsToValidate?: (keyof FormData)[]) => {
     let isValid = true;
     if (fieldsToValidate) {
       isValid = await trigger(fieldsToValidate);
     }
     if (isValid) {
+      if (step > 0 && sessionId) {
+        setIsSubmitting(true);
+        try {
+          await fetch("/api/registration", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              step,
+              sessionId,
+              values: form.getValues(),
+            }),
+          });
+        } catch (error) {
+          console.error("Failed to sync with Google Sheets", error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
       setStep((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+  const nextStep = handleStepSubmit;
 
   const prevStep = () => {
     setStep((prev) => prev - 1);
@@ -224,10 +251,11 @@ Here are my details:
                   </button>
                   <button 
                     type="button"
+                    disabled={isSubmitting}
                     onClick={() => nextStep(["studentName", "studentPhone"])}
-                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {t.continueBtn} <CaretRight className="ml-1.5" weight="bold" />
+                    {isSubmitting ? "Saving..." : <>{t.continueBtn} <CaretRight className="ml-1.5" weight="bold" /></>}
                   </button>
                 </div>
               </motion.div>
@@ -367,6 +395,7 @@ Here are my details:
                   </button>
                   <button 
                     type="button"
+                    disabled={isSubmitting}
                     onClick={() => {
                       if (!values.syllabus || !values.grade || !values.medium) {
                         setAlertMessage(t.selectSyllabusAlert);
@@ -374,9 +403,9 @@ Here are my details:
                       }
                       nextStep();
                     }}
-                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {t.continueBtn} <CaretRight className="ml-1.5" weight="bold" />
+                    {isSubmitting ? "Saving..." : <>{t.continueBtn} <CaretRight className="ml-1.5" weight="bold" /></>}
                   </button>
                 </div>
               </motion.div>
@@ -452,10 +481,11 @@ Here are my details:
                   </button>
                   <button 
                     type="button"
+                    disabled={isSubmitting}
                     onClick={() => nextStep(["parentName", "parentPhone"])}
-                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center w-full sm:w-auto px-10 min-h-[3.5rem] bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {t.submitBtn} <Check className="ml-1.5" weight="bold" />
+                    {isSubmitting ? "Submitting..." : <>{t.submitBtn} <Check className="ml-1.5" weight="bold" /></>}
                   </button>
                 </div>
               </motion.div>
@@ -500,6 +530,7 @@ Here are my details:
                   <div className="flex justify-center pt-6">
                     <button 
                       type="button"
+                      disabled={isSubmitting}
                       onClick={() => {
                         form.reset({
                           studentName: "",
@@ -515,9 +546,10 @@ Here are my details:
                           district: "",
                           language: form.getValues("language")
                         });
+                        setSessionId(uuidv4());
                         setStep(1);
                       }}
-                      className="flex items-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 font-bold text-sm h-12 px-6 rounded-2xl transition-colors cursor-pointer active:scale-[0.98]"
+                      className="flex items-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 font-bold text-sm h-12 px-6 rounded-2xl transition-colors cursor-pointer active:scale-[0.98] disabled:opacity-50"
                     >
                       <PlusCircle size={20} weight="fill" className="mr-2" />
                       {t.newRegistration}
