@@ -45,6 +45,16 @@ export async function POST(req: Request) {
       Status: step === 3 ? "Completed" : `Step ${step}`,
     };
 
+    try {
+      await sheet.loadHeaderRow();
+    } catch (e: any) {
+      if (e.message && e.message.includes('No values in the header row')) {
+        await sheet.setHeaderRow(Object.keys(rowData));
+      } else {
+        throw e;
+      }
+    }
+
     const rows = await sheet.getRows();
     const existingRow = rows.find(r => r.get('SessionId') === sessionId);
 
