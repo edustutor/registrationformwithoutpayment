@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
+function formatPhone(phone: string | undefined): string {
+  if (!phone) return "";
+  let cleaned = phone.replace(/[\s\D]/g, "");
+  if (cleaned.startsWith("0")) {
+    cleaned = "94" + cleaned.substring(1);
+  } else if (!cleaned.startsWith("94") && cleaned.length >= 9) {
+    cleaned = "94" + cleaned;
+  }
+  return cleaned;
+}
+
 export async function POST(req: Request) {
   try {
     const data = await req.json();
@@ -32,14 +43,14 @@ export async function POST(req: Request) {
       Timestamp: new Date().toISOString(),
       Language: values.language || "",
       'Student Name': values.studentName || "",
-      'Student Phone': values.studentPhone || "",
+      'Student Phone': formatPhone(values.studentPhone),
       School: values.school || "",
       Syllabus: values.syllabus || "",
       Grade: values.grade || "",
       Medium: values.medium || "",
       Subjects: Array.isArray(values.subjects) ? values.subjects.join(", ") : "",
       'Parent Name': values.parentName || "",
-      'Parent Phone': values.parentPhone || "",
+      'Parent Phone': formatPhone(values.parentPhone),
       Address: values.address || "",
       District: values.district || "",
       Status: step === 3 ? "Completed" : `Step ${step}`,
@@ -81,14 +92,14 @@ export async function POST(req: Request) {
       try {
         const description = [
           `Student Name: ${values.studentName || 'N/A'}`,
-          `Student Phone: ${values.studentPhone || 'N/A'}`,
+          `Student Phone: ${formatPhone(values.studentPhone) || 'N/A'}`,
           `School: ${values.school || 'N/A'}`,
           `Syllabus: ${values.syllabus || 'N/A'}`,
           `Grade: ${values.grade || 'N/A'}`,
           `Medium: ${values.medium || 'N/A'}`,
           `Subjects: ${(values.subjects || []).join(', ') || 'N/A'}`,
           `Parent Name: ${values.parentName || 'N/A'}`,
-          `Parent Phone: ${values.parentPhone || 'N/A'}`,
+          `Parent Phone: ${formatPhone(values.parentPhone) || 'N/A'}`,
           `Address: ${values.address || 'N/A'}`,
           `District: ${values.district || 'N/A'}`,
           `Language: ${values.language || 'English'}`
@@ -96,7 +107,7 @@ export async function POST(req: Request) {
 
         const leadData = new URLSearchParams({
           name: values.studentName || 'New Registration',
-          phonenumber: values.studentPhone || '',
+          phonenumber: formatPhone(values.studentPhone) || '',
           assigned: "48",
           status: "12",
           source: "16",

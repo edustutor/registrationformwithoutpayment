@@ -20,7 +20,7 @@ const schema = z.object({
   
   // Student Details
   studentName: z.string().min(2, "Name must be at least 2 characters").optional(),
-  studentPhone: z.string().regex(/^[0-9]+$/, "Must contain numbers only").optional(),
+  studentPhone: z.string().regex(/^[0-9\s+]+$/, "Must contain valid phone characters").optional(),
   school: z.string().optional(),
 
   // Academic Details
@@ -31,7 +31,7 @@ const schema = z.object({
 
   // Parent Details
   parentName: z.union([z.literal(""), z.string().min(2, "Name must be at least 2 characters")]).optional(),
-  parentPhone: z.union([z.literal(""), z.string().regex(/^[0-9]+$/, "Must contain numbers only")]).optional(),
+  parentPhone: z.union([z.literal(""), z.string().regex(/^[0-9\s+]+$/, "Must contain valid phone characters")]).optional(),
   address: z.string().optional(),
   district: z.string().optional(),
 });
