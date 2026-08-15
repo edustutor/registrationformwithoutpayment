@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const data = await req.json();
     const { step, sessionId, values } = data;
 
-    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
       console.error("Missing Google Credentials in .env");
       return NextResponse.json({ error: "Server configuration error: Missing credentials" }, { status: 500 });
     }
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    const doc = new GoogleSpreadsheet('1FowuzQWdn7QyJS6UsiuBH1ukFq8EzFKBsPn57ZJfuiE', serviceAccountAuth);
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
 
     // Look for the "Events Signup" sheet specifically, or fallback to the first sheet
