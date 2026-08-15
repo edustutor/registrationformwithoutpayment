@@ -21,8 +21,8 @@ export async function POST(req: Request) {
     const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
 
-    // Look for the "Events Signup" sheet specifically, or fallback to the first sheet
-    let sheet = doc.sheetsByTitle['Events Signup'];
+    // Look for the specific tab using its GID from the URL (300772715)
+    let sheet = doc.sheetsById[300772715];
     if (!sheet) {
       sheet = doc.sheetsByIndex[0];
     }
