@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     const serviceAccountAuth = new JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      key: process.env.GOOGLE_PRIVATE_KEY.replace(/^"|"$/g, '').replace(/\\n/g, '\n'),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
@@ -88,9 +88,12 @@ export async function POST(req: Request) {
     }
 
     // Step 3 (Final Submission): Add to Perfex CRM Leads
-    if (step === 3 && process.env.PERFEX_API_TOKEN) {
-      try {
-        const description = [
+    if (step === 3) {
+      if (!process.env.PERFEX_API_TOKEN) {
+        console.warn("⚠️ Skipping Perfex CRM push because PERFEX_API_TOKEN is missing in Vercel Environment Variables!");
+      } else {
+        try {
+          const description = [
           `Student Name: ${values.studentName || 'N/A'}`,
           `Student Phone: ${formatPhone(values.studentPhone) || 'N/A'}`,
           `School: ${values.school || 'N/A'}`,
@@ -125,10 +128,13 @@ export async function POST(req: Request) {
 
         if (!perfexRes.ok) {
           console.error("Perfex CRM API Error:", await perfexRes.text());
+        } else {
+          console.log("✅ Successfully pushed lead to Perfex CRM");
         }
       } catch (crmError) {
         console.error("Failed to push to Perfex CRM:", crmError);
         // We don't throw here to avoid blocking the user if CRM is down
+        }
       }
     }
 
