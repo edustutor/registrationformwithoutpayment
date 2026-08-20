@@ -5,7 +5,11 @@
 // scripts/verify-retry.mjs without standing up the whole app.
 // ---------------------------------------------------------------------------
 
-export const RETRY_ATTEMPTS = 4;
+// 6 attempts with a 400ms doubling backoff waits about 12 seconds in total.
+// Google's quota windows are per minute, so a short retry gives up while the
+// window is still closed. Waiting longer at the last step of the funnel beats
+// telling a student their registration failed.
+export const RETRY_ATTEMPTS = 6;
 export const RETRY_BASE_DELAY_MS = 400;
 
 function statusOf(error: unknown): number | null {
