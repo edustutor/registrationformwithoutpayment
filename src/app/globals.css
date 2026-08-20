@@ -128,3 +128,43 @@
     @apply font-sans;
   }
 }
+/* -------------------------------------------------------------------------
+   EDUS 60-Second Challenge
+   ------------------------------------------------------------------------- */
+
+@layer base {
+  html {
+    /* Geist covers Latin, Noto Sans Tamil covers Tamil. The browser picks per
+       glyph, so one stack serves both interface languages. */
+    font-family: var(--font-geist-sans), var(--font-noto-tamil), ui-sans-serif, system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Tamil compounds are long single tokens with no spaces to break at, so a
+     word like "ஏற்றுக்கொள்ளப்பட்டது" overflows a narrow card on a phone.
+     overflow-wrap inherits, so setting it once here covers every screen. */
+  body {
+    overflow-wrap: break-word;
+  }
+
+  /* Stops iOS Safari zooming in when a student focuses an input. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@layer utilities {
+  /* Respect a student who has asked their device for less animation. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
