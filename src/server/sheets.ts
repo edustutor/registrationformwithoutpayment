@@ -107,6 +107,19 @@ function loadDoc(): Promise<GoogleSpreadsheet> {
 }
 
 /**
+ * Tabs whose headers have already been verified by this instance.
+ *
+ * ensureHeaders used to run loadHeaderRow on every single sheet operation,
+ * which is a read against the Google quota. That made a full student journey
+ * cost 8 reads, so 8 students at once blew past the 60 reads per minute limit
+ * and the last step of the funnel started failing.
+ *
+ * Headers do not change during an event, so verifying once per instance is
+ * enough. Any later failure clears this, and withRefreshRetry re-verifies.
+ */
+const verifiedSheets = new Set<number>();
+
+/**
  * Confirms a tab is ready to write to. Adds headers to a genuinely empty tab,
  * accepts a tab that already carries every header we need (extra columns are
  * fine), and refuses anything else.
@@ -115,24 +128,27 @@ async function ensureHeaders(
   sheet: GoogleSpreadsheetWorksheet,
   headers: readonly string[],
 ): Promise<void> {
-  async function currentHeaders(): Promise<string[]> {
-    try {
-      await withRetry("loadHeaderRow", () => sheet.loadHeaderRow());
-      return sheet.headerValues.filter(Boolean);
-    } catch {
-      return [];
-    }
-  }
+  if (verifiedSheets.has(sheet.sheetId)) return;
 
-  const existing = await currentHeaders();
+  let existing: string[] = [];
+  try {
+    await withRetry("loadHeaderRow", () => sheet.loadHeaderRow());
+    existing = sheet.headerValues.filter(Boolean);
+  } catch {
+    existing = [];
+  }
 
   if (existing.length === 0) {
     await withRetry("setHeaderRow", () => sheet.setHeaderRow([...headers]));
+    verifiedSheets.add(sheet.sheetId);
     return;
   }
 
   const missing = headers.filter((header) => !existing.includes(header));
-  if (missing.length === 0) return;
+  if (missing.length === 0) {
+    verifiedSheets.add(sheet.sheetId);
+    return;
+  }
 
   throw new SheetSetupError(
     `Sheet "${sheet.title}" is missing columns: ${missing.join(", ")}. ` +
@@ -158,6 +174,9 @@ async function withRefreshRetry<T>(
     return await resolve(await loadDoc());
   } catch (firstError) {
     console.warn("[sheets] retrying after refreshing spreadsheet metadata", firstError);
+    // The tab may have been deleted, renamed or emptied, so anything we
+    // previously verified about it can no longer be trusted.
+    verifiedSheets.clear();
     const doc = await loadDoc();
     await withRetry("loadInfo(refresh)", () => doc.loadInfo());
     return resolve(doc);

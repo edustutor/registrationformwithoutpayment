@@ -32,8 +32,9 @@ check(!isTransient(err(404)), "404 missing tab is NOT retried");
 
 console.log("\n=== backoff grows and is jittered ===");
 const noJitter = () => 0;
-const delays = [1, 2, 3].map((a) => backoffFor(a, noJitter));
+const delays = [1, 2, 3, 4, 5].map((a) => backoffFor(a, noJitter));
 check(delays[0] === 400 && delays[1] === 800 && delays[2] === 1600, "doubles each attempt", delays.join("ms, ") + "ms");
+check(delays.reduce((a, b) => a + b, 0) >= 10000, "total wait rides out a quota minute", `${delays.reduce((a, b) => a + b, 0)}ms over ${RETRY_ATTEMPTS} attempts`);
 const jittered = new Set(Array.from({ length: 20 }, () => backoffFor(1)));
 check(jittered.size > 1, "jitter spreads simultaneous retries", `${jittered.size} distinct delays in 20 draws`);
 
