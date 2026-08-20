@@ -150,35 +150,63 @@ async function ensureHeaders(
   );
 }
 
+/**
+ * A long-lived serverless instance caches the spreadsheet's tab list. If a tab
+ * is deleted, renamed or recreated in the Sheets UI after this instance
+ * connected, the cached handle points at a tab that no longer exists and every
+ * write through it fails. That happened in production on 2026-08-20 when the
+ * quiz attempts tab was removed by hand.
+ *
+ * So every accessor gets one retry: refresh the spreadsheet metadata and look
+ * again before giving up.
+ */
+async function withRefreshRetry<T>(
+  resolve: (doc: GoogleSpreadsheet, isRetry: boolean) => Promise<T>,
+): Promise<T> {
+  try {
+    return await resolve(await loadDoc(), false);
+  } catch (firstError) {
+    console.warn("[sheets] retrying after refreshing spreadsheet metadata", firstError);
+    const doc = await loadDoc();
+    await doc.loadInfo();
+    return resolve(doc, true);
+  }
+}
+
 export async function getRegistrationsSheet(): Promise<GoogleSpreadsheetWorksheet> {
   const env = getServerEnv();
-  const doc = await loadDoc();
-  const sheet = doc.sheetsById[env.registrationsSheetGid];
 
-  if (!sheet) {
-    throw new SheetSetupError(
-      `No tab with GID ${env.registrationsSheetGid} in the spreadsheet. Check REGISTRATIONS_SHEET_GID.`,
-    );
-  }
+  return withRefreshRetry(async (doc) => {
+    const sheet = doc.sheetsById[env.registrationsSheetGid];
+    if (!sheet) {
+      throw new SheetSetupError(
+        `No tab with GID ${env.registrationsSheetGid} in the spreadsheet. Check REGISTRATIONS_SHEET_GID.`,
+      );
+    }
 
-  await ensureHeaders(sheet, REGISTRATION_HEADERS);
-  return sheet;
+    await ensureHeaders(sheet, REGISTRATION_HEADERS);
+    return sheet;
+  });
 }
 
 export async function getQuizAttemptsSheet(): Promise<GoogleSpreadsheetWorksheet> {
   const env = getServerEnv();
-  const doc = await loadDoc();
-  const existing = doc.sheetsByTitle[env.quizAttemptsSheetTitle];
+  const title = env.quizAttemptsSheetTitle;
 
-  if (existing) {
-    await ensureHeaders(existing, QUIZ_ATTEMPT_HEADERS);
-    return existing;
-  }
+  return withRefreshRetry(async (doc) => {
+    const existing = doc.sheetsByTitle[title];
+    if (existing) {
+      await ensureHeaders(existing, QUIZ_ATTEMPT_HEADERS);
+      return existing;
+    }
 
-  // Creating a new tab is additive, so it is safe to do automatically.
-  return doc.addSheet({
-    title: env.quizAttemptsSheetTitle,
-    headerValues: [...QUIZ_ATTEMPT_HEADERS],
+    // Creating a tab is additive, so it is safe to do automatically. This is
+    // what puts the tab back if someone deletes it mid-event.
+    return doc.addSheet({
+      title,
+      headerValues: [...QUIZ_ATTEMPT_HEADERS],
+      gridProperties: { rowCount: 10000, columnCount: QUIZ_ATTEMPT_HEADERS.length },
+    });
   });
 }
 
