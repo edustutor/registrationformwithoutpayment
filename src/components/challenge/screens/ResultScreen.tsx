@@ -9,6 +9,7 @@ import { Clock, DownloadSimple, EyeSlash, ShareNetwork, Target, Trophy } from "@
 import { gradeLabel, trackLabel, type LanguageCode } from "@/lib/catalog";
 import type { Dictionary } from "@/lib/dictionary";
 import { fillTemplate } from "@/lib/dictionary";
+import { EDUS_HOTLINE, EDUS_WEBSITE, SHARE_HASHTAGS } from "@/lib/links";
 import type { ChallengeResult } from "@/lib/types";
 import { PrimaryButton, SecondaryButton } from "../ui";
 
@@ -19,15 +20,25 @@ const TIER_EMOJI: Record<string, string> = {
   CHALLENGE_ACCEPTED: "💪",
 };
 
-/** Renders the PNG a student takes away. Deliberately carries no personal
- *  data: no name, no phone, no school, per the campaign privacy rules. */
+/**
+ * The PNG a student takes away and shares.
+ *
+ * Carries the student's name and school by explicit business decision, so a
+ * shared card identifies who did it and promotes EDUS. The phone number is
+ * never on the card. The website and hotline are included so a card shared to
+ * WhatsApp or Facebook advertises EDUS without any extra text.
+ */
 function ScoreCard({
   result,
+  studentName,
+  school,
   t,
   language,
   cardRef,
 }: {
   result: ChallengeResult;
+  studentName: string;
+  school: string;
   t: Dictionary;
   language: LanguageCode;
   cardRef: React.RefObject<HTMLDivElement | null>;
@@ -48,6 +59,14 @@ function ScoreCard({
           <h2 className="text-xl font-extrabold leading-tight text-white sm:text-2xl">
             {t.result.tiers[result.tier]}
           </h2>
+
+          {studentName && (
+            <p className="mt-2 text-lg font-bold leading-tight text-white">{studentName}</p>
+          )}
+          {school && (
+            <p className="text-sm font-medium leading-tight text-blue-100">{school}</p>
+          )}
+
           <p className="mt-1 text-sm font-semibold text-blue-100">
             {gradeLabel(result.grade, language)}
             {trackName ? ` · ${trackName}` : ""}
@@ -95,9 +114,13 @@ function ScoreCard({
             </div>
           )}
 
-          <p className="mt-5 border-t border-slate-100 pt-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            EDUS 60-Second Challenge · YGCIF 2026
-          </p>
+          <div className="mt-5 border-t border-slate-100 pt-4 text-center">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              EDUS 60-Second Challenge · YGCIF 2026
+            </p>
+            <p className="mt-1.5 text-sm font-black text-blue-700">{EDUS_WEBSITE}</p>
+            <p className="text-[11px] font-bold text-slate-500">Hotline {EDUS_HOTLINE}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -118,12 +141,16 @@ export function ResultScreen({
   t,
   language,
   result,
+  studentName,
+  school,
   storageFailed,
   onContinue,
 }: {
   t: Dictionary;
   language: LanguageCode;
   result: ChallengeResult;
+  studentName: string;
+  school: string;
   storageFailed: boolean;
   onContinue: () => void;
 }) {
@@ -131,7 +158,7 @@ export function ResultScreen({
   const { width, height } = useWindowSize();
   const [busy, setBusy] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [canShare, setCanShare] = useState(true);
+  const [shareNote, setShareNote] = useState<string | null>(null);
 
   const fileName = `edus-challenge-${result.correctCount}-of-${result.totalQuestions}.png`;
 
@@ -171,25 +198,78 @@ export function ResultScreen({
     }
   }
 
+  /**
+   * The caption that travels with a shared card. Carries who did it, the
+   * score, the EDUS website and hotline, and the campaign hashtags, so a share
+   * promotes EDUS without the student writing anything.
+   */
+  function buildCaption(): string {
+    return fillTemplate(t.result.shareCaption, {
+      name: studentName,
+      // The connector differs per language, so it lives in the copy file.
+      school: school ? fillTemplate(t.result.shareCaptionSchool, { school }) : "",
+      correct: result.correctCount,
+      total: result.totalQuestions,
+      grade: gradeLabel(result.grade, language),
+      score: result.normalisedScore,
+      seconds: Math.round(result.elapsedMs / 100) / 10,
+      website: EDUS_WEBSITE,
+      hotline: EDUS_HOTLINE,
+      hashtags: SHARE_HASHTAGS,
+    });
+  }
+
+  async function copyCaption(caption: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(caption);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Three routes, best first.
+   *
+   * 1. The device can share an image with text: WhatsApp and Facebook receive
+   *    the card and the caption together, which is the whole point.
+   * 2. The device can share an image but drops text: copy the caption to the
+   *    clipboard first and tell the student to paste it.
+   * 3. No share sheet at all, typically desktop: save the image and copy the
+   *    caption so they can post both by hand.
+   */
   async function handleShare() {
     setBusy(true);
     setDownloadError(null);
+    setShareNote(null);
+
     try {
       const blob = await renderCard();
       if (!blob) throw new Error("Canvas produced no image");
 
       const file = new File([blob], fileName, { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "EDUS 60-Second Challenge" });
-      } else {
-        setCanShare(false);
-        await handleDownload();
+      const caption = buildCaption();
+
+      if (navigator.canShare?.({ files: [file], text: caption })) {
+        await navigator.share({ files: [file], text: caption, title: t.result.shareTitle });
+        return;
       }
+
+      if (navigator.canShare?.({ files: [file] })) {
+        const copied = await copyCaption(caption);
+        await navigator.share({ files: [file], title: t.result.shareTitle });
+        if (copied) setShareNote(t.result.captionCopied);
+        return;
+      }
+
+      const copied = await copyCaption(caption);
+      await handleDownload();
+      if (copied) setShareNote(t.result.savedAndCopied);
     } catch (error) {
       // A student dismissing the share sheet is not an error worth showing.
       if ((error as Error)?.name !== "AbortError") {
         console.error("[result] share failed", error);
-        setCanShare(false);
+        setDownloadError(t.result.downloadFailed);
       }
     } finally {
       setBusy(false);
@@ -209,7 +289,14 @@ export function ResultScreen({
       )}
 
       <div className="mx-auto w-full max-w-lg flex-1 px-4 py-6 md:py-10">
-        <ScoreCard result={result} t={t} language={language} cardRef={cardRef} />
+        <ScoreCard
+          result={result}
+          studentName={studentName}
+          school={school}
+          t={t}
+          language={language}
+          cardRef={cardRef}
+        />
 
         <div className="px-6">
           <p className="mb-2 text-center text-base font-semibold leading-relaxed text-slate-600">
@@ -240,6 +327,12 @@ export function ResultScreen({
             </p>
           )}
 
+          {shareNote && (
+            <p role="status" className="mb-4 rounded-xl bg-blue-50 px-4 py-3 text-center text-xs font-semibold text-blue-800">
+              {shareNote}
+            </p>
+          )}
+
           <div className="space-y-3">
             <SecondaryButton onClick={handleDownload} disabled={busy}>
               <span className="flex items-center justify-center gap-2">
@@ -248,14 +341,12 @@ export function ResultScreen({
               </span>
             </SecondaryButton>
 
-            {canShare && typeof navigator !== "undefined" && "share" in navigator && (
-              <SecondaryButton onClick={handleShare} disabled={busy}>
-                <span className="flex items-center justify-center gap-2">
-                  <ShareNetwork size={19} weight="bold" />
-                  {t.result.share}
-                </span>
-              </SecondaryButton>
-            )}
+            <SecondaryButton onClick={handleShare} disabled={busy}>
+              <span className="flex items-center justify-center gap-2">
+                <ShareNetwork size={19} weight="bold" />
+                {t.result.share}
+              </span>
+            </SecondaryButton>
 
             <PrimaryButton onClick={onContinue} disabled={busy}>
               {t.result.continueCta} &rarr;

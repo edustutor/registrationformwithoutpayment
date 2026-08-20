@@ -74,6 +74,7 @@ export async function POST(request: Request) {
               "Student Name": profile.fullName,
               "Student Phone": profile.phone,
               "Contact Owner": profile.contactOwner,
+              School: profile.school,
               Consent: "Yes",
               Source: LEAD_SOURCE,
               Campaign: CAMPAIGN_CODE,

@@ -38,15 +38,13 @@ export async function POST(request: Request) {
 
   let stored: Record<string, string>;
   try {
+    // Name, phone, contact owner and school were captured on the first screen
+    // and are already on this row, so they are not rewritten here.
     stored = await upsertRegistrationRow(input.sessionId, {
       "Attempt Id": input.attemptId,
       "Registered At": new Date().toISOString(),
       Status: "REGISTERED",
       Language: input.language,
-      "Student Name": input.fullName,
-      "Student Phone": input.phone,
-      "Contact Owner": input.contactOwner,
-      School: input.school,
       District: input.district,
       Subjects: input.subjects.join(", "),
       "Class Type": input.classType,
@@ -62,10 +60,12 @@ export async function POST(request: Request) {
   // Awaited so the push finishes before the serverless function freezes.
   // pushLeadToCrm never throws, so a CRM outage cannot fail a registration
   // that is already safely stored in the sheet.
+  // The CRM payload reads the contact details back from the stored row rather
+  // than trusting anything the browser sent on this request.
   await pushLeadToCrm({
-    fullName: input.fullName,
-    phone: input.phone,
-    school: input.school,
+    fullName: stored["Student Name"] ?? "",
+    phone: stored["Student Phone"] ?? "",
+    school: stored["School"] ?? "",
     district: input.district,
     grade: stored["Grade"] ?? "",
     alTrack: stored["A/L Track"] ?? "",
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     subjects: input.subjects,
     classType: input.classType,
     startIntent: input.startIntent,
-    contactOwner: input.contactOwner,
+    contactOwner: stored["Contact Owner"] ?? "",
     correctCount: Number(stored["Correct Count"]) || 0,
     totalQuestions: Number(stored["Total Questions"]) || 0,
     score: Number(stored["Score"]) || 0,

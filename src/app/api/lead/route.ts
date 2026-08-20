@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       "Student Name": input.fullName,
       "Student Phone": input.phone,
       "Contact Owner": input.contactOwner,
+      School: input.school,
       Consent: "Yes",
       Source: LEAD_SOURCE,
       Campaign: CAMPAIGN_CODE,

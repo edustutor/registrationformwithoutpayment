@@ -12,7 +12,8 @@ import { withRetry, isTransient, backoffFor, RETRY_ATTEMPTS } from "../src/serve
 let pass = 0;
 let fail = 0;
 const check = (ok, label, extra = "") => {
-  ok ? pass++ : fail++;
+  if (ok) pass++;
+  else fail++;
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label.padEnd(52)} ${extra}`);
 };
 
