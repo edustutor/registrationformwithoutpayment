@@ -43,3 +43,6 @@ next-env.d.ts
 
 # credentials
 google-service-account.json
+
+# Claude Code local settings (machine specific, not shared)
+.claude/settings.local.json

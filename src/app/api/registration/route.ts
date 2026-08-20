@@ -1,152 +1,86 @@
-import { NextResponse } from 'next/server';
-import { GoogleSpreadsheet } from 'google-spreadsheet';
-import { JWT } from 'google-auth-library';
+import { NextResponse } from "next/server";
 
-function formatPhone(phone: string | undefined): string {
-  if (!phone) return "";
-  let cleaned = phone.replace(/[\s\D]/g, "");
-  if (cleaned.startsWith("0")) {
-    cleaned = "94" + cleaned.substring(1);
-  } else if (!cleaned.startsWith("94") && cleaned.length >= 9) {
-    cleaned = "94" + cleaned;
-  }
-  return cleaned;
-}
+import { registrationSchema } from "@/lib/schemas";
+import type { RegistrationResponse } from "@/lib/types";
+import { apiError, issuesToMessages } from "@/server/api-response";
+import { pushLeadToCrm } from "@/server/crm";
+import { CAMPAIGN_CODE, LEAD_SOURCE, upsertRegistrationRow } from "@/server/sheets";
 
-export async function POST(req: Request) {
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/**
+ * Completes a registration after the challenge.
+ *
+ * The quiz result was already written against this session id, so this handler
+ * only adds the contact and interest details and reads the stored score back
+ * for the CRM. It never trusts a score sent by the browser.
+ */
+export async function POST(request: Request) {
+  let body: unknown;
   try {
-    const data = await req.json();
-    const { step, sessionId, values } = data;
-
-    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
-      console.error("Missing Google Credentials in .env");
-      return NextResponse.json({ error: "Server configuration error: Missing credentials" }, { status: 500 });
-    }
-
-    const serviceAccountAuth = new JWT({
-      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: process.env.GOOGLE_PRIVATE_KEY.replace(/^"|"$/g, '').replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
-
-    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
-    await doc.loadInfo();
-
-    // Look for the specific tab using its GID from the URL (300772715)
-    let sheet = doc.sheetsById[300772715];
-    if (!sheet) {
-      sheet = doc.sheetsByIndex[0];
-    }
-
-    const rowData = {
-      SessionId: sessionId,
-      Timestamp: new Date().toISOString(),
-      Language: values.language || "",
-      'Student Name': values.studentName || "",
-      'Student Phone': formatPhone(values.studentPhone),
-      School: values.school || "",
-      Syllabus: values.syllabus || "",
-      Grade: values.grade || "",
-      Medium: values.medium || "",
-      Subjects: Array.isArray(values.subjects) ? values.subjects.join(", ") : "",
-      'Class Type': Array.isArray(values.classType) ? values.classType.join(", ") : (values.classType || ""),
-      'Start Date': values.startDate || "",
-      'Parent Name': values.parentName || "",
-      'Parent Phone': formatPhone(values.parentPhone),
-      Address: values.address || "",
-      District: values.district || "",
-      'Quiz Score': values.quizScore !== undefined ? `${values.quizScore}/5` : "",
-      Status: step === 99 ? "Completed" : `Step ${step}`,
-    };
-
-    try {
-      await sheet.loadHeaderRow();
-    } catch (e: any) {
-      if (e.message && e.message.includes('No values in the header row')) {
-        await sheet.setHeaderRow(Object.keys(rowData));
-      } else {
-        throw e;
-      }
-    }
-
-    const rows = await sheet.getRows();
-    const existingRow = rows.find(r => r.get('SessionId') === sessionId);
-
-    if (existingRow) {
-      // Update the existing row (handles Step > 1, or Step 1 if they clicked 'Back' and then 'Continue' again)
-      existingRow.assign(rowData);
-      await existingRow.save();
-    } else {
-      // Create a new row if it doesn't exist
-      try {
-        await sheet.addRow(rowData);
-      } catch (e: any) {
-         if (e.message && e.message.includes('headerValues')) {
-           await sheet.setHeaderRow(Object.keys(rowData));
-           await sheet.addRow(rowData);
-         } else {
-           throw e;
-         }
-      }
-    }
-
-    // Step 99 (Final Submission): Add to Perfex CRM Leads
-    if (step === 99) {
-      if (!process.env.PERFEX_API_TOKEN) {
-        console.warn("⚠️ Skipping Perfex CRM push because PERFEX_API_TOKEN is missing in Vercel Environment Variables!");
-      } else {
-        try {
-          const description = [
-          `Student Name: ${values.studentName || 'N/A'}`,
-          `Student Phone: ${formatPhone(values.studentPhone) || 'N/A'}`,
-          `School: ${values.school || 'N/A'}`,
-          `Syllabus: ${values.syllabus || 'N/A'}`,
-          `Grade: ${values.grade || 'N/A'}`,
-          `Medium: ${values.medium || 'N/A'}`,
-          `Subjects: ${(values.subjects || []).join(', ') || 'N/A'}`,
-          `Class Type: ${Array.isArray(values.classType) ? values.classType.join(', ') : (values.classType || 'N/A')}`,
-          `Start Date: ${values.startDate || 'N/A'}`,
-          `Parent Name: ${values.parentName || 'N/A'}`,
-          `Parent Phone: ${formatPhone(values.parentPhone) || 'N/A'}`,
-          `Address: ${values.address || 'N/A'}`,
-          `District: ${values.district || 'N/A'}`,
-          `Language: ${values.language || 'English'}`,
-          `Quiz Score: ${values.quizScore !== undefined ? values.quizScore + '/5' : 'N/A'}`
-        ].join('\n');
-
-        const leadData = new URLSearchParams({
-          name: values.studentName || 'New Registration',
-          phonenumber: formatPhone(values.studentPhone) || '',
-          assigned: "48",
-          status: "12",
-          source: "16",
-          description: description
-        });
-
-        const perfexRes = await fetch('https://crm.edustutor.com/api/leads', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'authtoken': process.env.PERFEX_API_TOKEN
-          },
-          body: leadData.toString()
-        });
-
-        if (!perfexRes.ok) {
-          console.error("Perfex CRM API Error:", await perfexRes.text());
-        } else {
-          console.log("✅ Successfully pushed lead to Perfex CRM");
-        }
-      } catch (crmError) {
-        console.error("Failed to push to Perfex CRM:", crmError);
-        // We don't throw here to avoid blocking the user if CRM is down
-        }
-      }
-    }
-
-    return NextResponse.json({ success: true, sessionId });
-  } catch (error) {
-    console.error("Google Sheets API Error:", error);
-    return NextResponse.json({ error: "Failed to update Google Sheet" }, { status: 500 });
+    body = await request.json();
+  } catch {
+    return apiError("VALIDATION_FAILED", "Request body must be JSON.", 400);
   }
+
+  const parsed = registrationSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiError(
+      "VALIDATION_FAILED",
+      "Please check the details you entered.",
+      400,
+      issuesToMessages(parsed.error.issues),
+    );
+  }
+
+  const input = parsed.data;
+
+  let stored: Record<string, string>;
+  try {
+    stored = await upsertRegistrationRow(input.sessionId, {
+      "Attempt Id": input.attemptId,
+      "Registered At": new Date().toISOString(),
+      Status: "REGISTERED",
+      Language: input.language,
+      "Student Name": input.fullName,
+      "Student Phone": input.phone,
+      "Contact Owner": input.contactOwner,
+      School: input.school,
+      District: input.district,
+      Subjects: input.subjects.join(", "),
+      "Class Type": input.classType,
+      "Start Intent": input.startIntent,
+      Source: LEAD_SOURCE,
+      Campaign: CAMPAIGN_CODE,
+    });
+  } catch (error) {
+    console.error("[registration] sheet write failed", error);
+    return apiError("STORAGE_ERROR", "We could not save your registration. Please try again.", 502);
+  }
+
+  // Awaited so the push finishes before the serverless function freezes.
+  // pushLeadToCrm never throws, so a CRM outage cannot fail a registration
+  // that is already safely stored in the sheet.
+  await pushLeadToCrm({
+    fullName: input.fullName,
+    phone: input.phone,
+    school: input.school,
+    district: input.district,
+    grade: stored["Grade"] ?? "",
+    alTrack: stored["A/L Track"] ?? "",
+    medium: stored["Medium"] ?? "",
+    language: input.language,
+    subjects: input.subjects,
+    classType: input.classType,
+    startIntent: input.startIntent,
+    contactOwner: input.contactOwner,
+    correctCount: Number(stored["Correct Count"]) || 0,
+    totalQuestions: Number(stored["Total Questions"]) || 0,
+    score: Number(stored["Score"]) || 0,
+    elapsedSeconds: Number(stored["Time Taken (s)"]) || 0,
+    rank: Number(stored["Grade Rank"]) || 0,
+  });
+
+  return NextResponse.json<RegistrationResponse>({ success: true });
 }
