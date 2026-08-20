@@ -59,6 +59,7 @@ src/
     page.tsx                    Renders ChallengeApp
     globals.css                 Tailwind v4 theme, font stack, reduced-motion, word-break
     api/
+      health/route.ts           Can this app store a student right now
       lead/route.ts             Stores the lead the moment it is given
       quiz/start/route.ts       Picks the questions, issues a signed session token
       quiz/submit/route.ts      Grades server-side, scores, ranks, persists
@@ -79,6 +80,7 @@ src/
 
   server/                       Server only, guarded by the `server-only` package
     env.ts                      Environment validation, read and checked once
+    retry.ts                    Backoff for Sheets rate limits, import free so it is testable
     question-bank.ts            Loads the bank, selects questions, grades answers
     quiz-token.ts               HMAC signing and verification of a quiz session
     sheets.ts                   Google Sheets access, upsert, ranking
@@ -86,6 +88,7 @@ src/
     api-response.ts             One error envelope for every route
 
 scripts/setup-sheets.mjs        One-time preparation of the two sheet tabs
+scripts/verify-retry.mjs        Exercises the rate-limit retry without calling Google
 EDUS_YGC_2026_Questions_Only.json   287 bilingual questions (imported at build time)
 ```
 
@@ -204,18 +207,30 @@ npm run dev
 npm run check
 ```
 
-Runs `tsc --noEmit` then `eslint`.
+Runs `tsc --noEmit`, then `eslint`, then `npm run verify:retry`.
+
+The retry check exercises the rate-limit path that cannot be induced safely
+against production: which failures are retried, that backoff doubles and is
+jittered, that a non-transient error fails fast, and that the attempt limit
+holds.
 
 ---
 
 ## Operational notes
 
-- **Sheets write quota** is 60 write requests per minute per service account. A
-  full journey costs five writes (lead, quiz start, quiz submit plus its answer
-  rows, registration), so throughput tops out around 12 completed students per
-  minute. A single student takes roughly 90 seconds to get through the flow, so
-  you would need about 18 tablets running non-stop to reach that. If you ever
-  do, move storage to a database.
+- **Sheets quota** is roughly 60 reads and 60 writes per minute per service
+  account. A full journey costs five writes and three reads. Being throttled no
+  longer fails a student: every Google call retries with exponential backoff and
+  jitter, so a burst degrades into a short wait instead of an error. Sustained
+  overload past the retry budget would still fail, and the answer is a database,
+  not a bigger retry.
+- **A student is never blocked by a failed lead write.** If the sheet cannot be
+  written on the first screen, they are let through and the browser re-sends the
+  same details when the quiz starts, which recreates the row. Every later step
+  re-sends what it knows, so one failed write is repaired by the next step.
+- **`GET /api/health`** answers "can this app store a student right now" without
+  opening the spreadsheet. It reads no rows, so booth staff can poll it during
+  the event, and it reports no participant data.
 - **A failed lead write stops the student**, on purpose. There is nothing else
   in flight to salvage at that point, and losing the lead is the one outcome
   this flow exists to prevent, so the student is asked to try again.

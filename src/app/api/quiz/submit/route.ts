@@ -18,8 +18,7 @@ import {
   CAMPAIGN_CODE,
   LEAD_SOURCE,
   appendQuizAttemptRows,
-  rankAgainstPeers,
-  upsertRegistrationRow,
+  rankAndSaveResult,
   type QuizAttemptRow,
 } from "@/server/sheets";
 
@@ -167,43 +166,48 @@ export async function POST(request: Request) {
   const gradeName = gradeLabel(payload.grade);
   const trackName = payload.alTrack ? trackLabel(payload.alTrack) : "";
 
-  // Rank first, then write. Reading peers before the row exists avoids
-  // counting this attempt against itself and saves a second write.
+  // Ranking and saving share one pass over the sheet, so a submission costs
+  // one read instead of two. That headroom matters when a booth queue is
+  // pushing against the Sheets rate limit.
   let rank = 1;
   let rankOutOf = 1;
   let storageFailed = false;
 
   try {
-    const ranking = await rankAgainstPeers(gradeName, trackName, payload.sessionId, {
-      correctCount: breakdown.correctCount,
-      normalisedScore: breakdown.normalisedScore,
-      hardCorrect: breakdown.hardCorrect,
-      elapsedMs,
-      submittedAt: now,
-    });
+    const ranking = await rankAndSaveResult(
+      payload.sessionId,
+      gradeName,
+      trackName,
+      {
+        correctCount: breakdown.correctCount,
+        normalisedScore: breakdown.normalisedScore,
+        hardCorrect: breakdown.hardCorrect,
+        elapsedMs,
+        submittedAt: now,
+      },
+      (position) => ({
+        "Attempt Id": payload.attemptId,
+        "Started At": new Date(payload.startedAt).toISOString(),
+        "Submitted At": submittedAtIso,
+        Status: "CHALLENGE_COMPLETED",
+        Language: payload.language,
+        Grade: gradeName,
+        "A/L Track": trackName,
+        Medium: payload.medium,
+        "Correct Count": breakdown.correctCount,
+        "Hard Correct": breakdown.hardCorrect,
+        "Total Questions": QUESTION_COUNT,
+        Score: breakdown.normalisedScore,
+        "Time Taken (s)": elapsedSeconds,
+        Tier: tier,
+        Badges: badges.join(", "),
+        "Grade Rank": position,
+        Source: LEAD_SOURCE,
+        Campaign: CAMPAIGN_CODE,
+      }),
+    );
     rank = ranking.rank;
     rankOutOf = ranking.rankOutOf;
-
-    await upsertRegistrationRow(payload.sessionId, {
-      "Attempt Id": payload.attemptId,
-      "Started At": new Date(payload.startedAt).toISOString(),
-      "Submitted At": submittedAtIso,
-      Status: "CHALLENGE_COMPLETED",
-      Language: payload.language,
-      Grade: gradeName,
-      "A/L Track": trackName,
-      Medium: payload.medium,
-      "Correct Count": breakdown.correctCount,
-      "Hard Correct": breakdown.hardCorrect,
-      "Total Questions": QUESTION_COUNT,
-      Score: breakdown.normalisedScore,
-      "Time Taken (s)": elapsedSeconds,
-      Tier: tier,
-      Badges: badges.join(", "),
-      "Grade Rank": rank,
-      Source: LEAD_SOURCE,
-      Campaign: CAMPAIGN_CODE,
-    });
 
     await appendQuizAttemptRows(toAttemptRows(payload, graded, submittedAtIso));
   } catch (error) {
