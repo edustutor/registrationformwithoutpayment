@@ -203,6 +203,18 @@ export async function getQuizAttemptsSheet(): Promise<GoogleSpreadsheetWorksheet
   });
 }
 
+/**
+ * google-spreadsheet appends with insertDataOption OVERWRITE by default, which
+ * writes into the cells after the last row it finds. Two tablets appending at
+ * the same moment can both resolve the same position, and one silently
+ * overwrites the other. A burst of 8 concurrent students on 2026-08-20 lost 15
+ * of 40 answer rows that way, with every request still reporting success.
+ *
+ * INSERT_ROWS makes the API insert new rows instead, so concurrent appends
+ * cannot land on top of each other. Every append in this file uses it.
+ */
+const APPEND_INSERT = { insert: true } as const;
+
 export type RegistrationRow = Partial<Record<(typeof REGISTRATION_HEADERS)[number], string | number>>;
 export type QuizAttemptRow = Partial<Record<(typeof QUIZ_ATTEMPT_HEADERS)[number], string | number>>;
 
@@ -219,7 +231,7 @@ export async function createRegistrationRow(
 ): Promise<void> {
   const sheet = await getRegistrationsSheet();
   await withRetry("addRow(registration)", async () => {
-    await sheet.addRow({ "Session Id": sessionId, ...values });
+    await sheet.addRow({ "Session Id": sessionId, ...values }, APPEND_INSERT);
   });
 }
 
@@ -243,7 +255,7 @@ export async function upsertRegistrationRow(
   }
 
   const created = await withRetry("addRow(registration)", () =>
-    sheet.addRow({ "Session Id": sessionId, ...values }),
+    sheet.addRow({ "Session Id": sessionId, ...values }, APPEND_INSERT),
   );
   return created.toObject() as Record<string, string>;
 }
@@ -252,7 +264,7 @@ export async function appendQuizAttemptRows(rows: QuizAttemptRow[]): Promise<voi
   if (rows.length === 0) return;
   const sheet = await getQuizAttemptsSheet();
   await withRetry("addRows(attempts)", async () => {
-    await sheet.addRows(rows as Record<string, string | number>[]);
+    await sheet.addRows(rows as Record<string, string | number>[], APPEND_INSERT);
   });
 }
 
@@ -317,7 +329,7 @@ export async function rankAndSaveResult(
     await withRetry("saveRow(result)", () => own.save());
   } else {
     await withRetry("addRow(result)", async () => {
-      await sheet.addRow({ "Session Id": sessionId, ...values });
+      await sheet.addRow({ "Session Id": sessionId, ...values }, APPEND_INSERT);
     });
   }
 
