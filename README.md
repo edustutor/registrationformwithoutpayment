@@ -239,6 +239,21 @@ holds.
   hand. The server logs the failure.
 - **A CRM outage cannot fail a registration.** The lead push is best-effort and
   its errors are logged and swallowed; the sheet is the record of truth.
+- **`Grade Rank` in the sheet is a snapshot**, taken at the moment that student
+  submitted. Under a burst two students can show the same rank, because each
+  ranking read a slightly different set of rows. That is inherent to ranking at
+  submit time.
+
+  **For prizes, sort the sheet at the end** rather than trusting the stored
+  snapshot: `Correct Count` descending, then `Score` descending, then
+  `Hard Correct` descending, then `Time Taken (s)` ascending. That is the order
+  the campaign config specifies, and it is always derivable from the stored
+  columns.
+- **Concurrent appends must use `INSERT_ROWS`.** google-spreadsheet defaults to
+  `OVERWRITE`, which lets two simultaneous appends resolve the same position and
+  silently overwrite one another. A burst of 8 students lost 15 of 40 answer
+  rows that way, with every request still returning success. Every append in
+  `src/server/sheets.ts` passes `insert: true`. Do not remove it.
 - **Answers are hidden on purpose.** Showing them at a live booth lets students
   pass them around and destroys the leaderboard. Release them after the
   leaderboard closes.
