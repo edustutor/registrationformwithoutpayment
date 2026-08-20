@@ -279,9 +279,14 @@ may share publicly. If that trade is ever revisited, the card is built in
 | No share sheet, typically desktop | Image is saved and the caption copied, so both can be posted by hand |
 
 The caption carries the student's name, school, score, grade, points, time, the
-website, the hotline and `#edus #edus_classes #YGCIF26`. It is written in the
-language the student chose; the "from {school}" connector differs per language
-and lives in `dictionary.ts`, not in the component.
+website, the hotline and `#edus #edus_classes #EDUSChallenge #YGCIF26`. It is
+written in the language the student chose; the "from {school}" connector differs
+per language and lives in `dictionary.ts`, not in the component.
+
+It opens with the same tier emoji the card shows, so a perfect score leads with
+a trophy and a tough round leads with a flexed arm. The stats sit on short
+separate lines because WhatsApp and Facebook truncate long paragraphs in the
+link preview.
 
 ---
 
