@@ -103,8 +103,11 @@ const en = {
     share: "Share your result",
     captionCopied: "Caption copied. Paste it with the image when you share.",
     savedAndCopied: "Image saved and caption copied. Paste the caption when you post.",
+    // {badge} is the tier emoji, so a perfect score leads with a trophy and a
+    // tough round leads with a flexed arm. Laid out as short lines because
+    // WhatsApp and Facebook truncate long paragraphs in the preview.
     shareCaption:
-      "{name}{school} scored {correct}/{total} in the EDUS 60-Second Challenge at YGC Innovation Festival 2026.\n{grade} · {score} points · {seconds}s\n\nThink you can beat that?\nLearn with EDUS: {website}\nHotline: {hotline}\n\n{hashtags}",
+      "{badge} {name}{school} took on the EDUS 60-Second Challenge at YGC Innovation Festival 2026!\n\n⚡ Score: {correct}/{total}\n🎯 Points: {score}\n⏱️ Time: {seconds}s\n🎓 {grade}\n\n🔥 Think you can beat that?\n\n📚 Learn with EDUS: {website}\n📞 Hotline: {hotline}\n\n{hashtags}",
     shareTitle: "EDUS 60-Second Challenge",
     // Injected as {school} only when a school was given.
     shareCaptionSchool: " from {school}",
@@ -277,7 +280,7 @@ const ta: Dictionary = {
     captionCopied: "எழுத்து நகலெடுக்கப்பட்டது. படத்துடன் சேர்த்து ஒட்டுங்கள்.",
     savedAndCopied: "படம் சேமிக்கப்பட்டது, எழுத்து நகலெடுக்கப்பட்டது. பகிரும்போது ஒட்டுங்கள்.",
     shareCaption:
-      "{name}{school} YGC Innovation Festival 2026 இல் EDUS 60-விநாடி சவாலில் {correct}/{total} பெற்றார்.\n{grade} · {score} புள்ளிகள் · {seconds}s\n\nஉங்களால் இதை முறியடிக்க முடியுமா?\nEDUS உடன் கற்கவும்: {website}\nHotline: {hotline}\n\n{hashtags}",
+      "{badge} {name}{school} YGC Innovation Festival 2026 இல் EDUS 60-விநாடி சவாலில் பங்கேற்றார்!\n\n⚡ மதிப்பெண்: {correct}/{total}\n🎯 புள்ளிகள்: {score}\n⏱️ நேரம்: {seconds}s\n🎓 {grade}\n\n🔥 உங்களால் இதை முறியடிக்க முடியுமா?\n\n📚 EDUS உடன் கற்கவும்: {website}\n📞 Hotline: {hotline}\n\n{hashtags}",
     shareTitle: "EDUS 60-விநாடி சவால்",
     shareCaptionSchool: " ({school})",
     continueCta: "பதிவுக்குத் தொடர்க",

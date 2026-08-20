@@ -205,6 +205,8 @@ export function ResultScreen({
    */
   function buildCaption(): string {
     return fillTemplate(t.result.shareCaption, {
+      // Same emoji the card shows, so the post and the image agree.
+      badge: TIER_EMOJI[result.tier],
       name: studentName,
       // The connector differs per language, so it lives in the copy file.
       school: school ? fillTemplate(t.result.shareCaptionSchool, { school }) : "",

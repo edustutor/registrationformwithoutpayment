@@ -6,7 +6,7 @@ import type { Bilingual } from "./catalog";
  *  promotes EDUS on its own. Keep these in step with EDUS_LINKS below. */
 export const EDUS_WEBSITE = "www.edus.lk";
 export const EDUS_HOTLINE = "+94 70 707 2072";
-export const SHARE_HASHTAGS = "#edus #edus_classes #YGCIF26";
+export const SHARE_HASHTAGS = "#edus #edus_classes #EDUSChallenge #YGCIF26";
 
 export type EdusLink = { id: string; label: Bilingual; url: string; primary?: boolean };
 
