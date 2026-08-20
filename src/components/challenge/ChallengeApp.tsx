@@ -122,6 +122,7 @@ export default function ChallengeApp() {
           fullName: profile.fullName,
           phone: profile.phone,
           contactOwner: profile.contactOwner,
+          school: profile.school,
           consent: profile.consent,
         }),
       });
@@ -163,6 +164,7 @@ export default function ChallengeApp() {
             fullName: profile.fullName,
             phone: profile.phone,
             contactOwner: profile.contactOwner,
+            school: profile.school,
             consent: profile.consent,
           },
         }),
@@ -330,6 +332,8 @@ export default function ChallengeApp() {
             t={t}
             language={language}
             result={result}
+            studentName={profile.fullName}
+            school={profile.school}
             storageFailed={storageFailed}
             onContinue={() => goTo("REGISTRATION")}
           />

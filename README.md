@@ -20,12 +20,12 @@ WELCOME -> LANGUAGE -> PROFILE -> SETUP -> READY -> QUIZ -> RESULT -> REGISTRATI
 | --- | --- |
 | `WELCOME` | Brand entry point. |
 | `LANGUAGE` | English or Tamil. Sets **both** the interface language and the language the questions are shown in. |
-| `PROFILE` | Name, WhatsApp number, whose number it is, and consent. **Written to the sheet before the student goes any further.** |
+| `PROFILE` | Name, WhatsApp number, whose number it is, school (optional), and consent. **Written to the sheet before the student goes any further.** |
 | `SETUP` | Grade, then medium. Only the mediums EDUS teaches that grade in are offered, and a grade with one medium selects it automatically. Grade A/L also asks for a stream. |
 | `READY` | Rules and the GO button. The clock starts on GO, not before. |
 | `QUIZ` | Five questions, one at a time, no going back, one sixty second timer for the whole attempt. Auto-submits at zero. |
-| `RESULT` | Score, points, time, grade rank, badges, and a downloadable PNG score card. Correct answers are deliberately not shown. |
-| `REGISTRATION` | District, subjects, class type and start intent. Name, number and contact owner arrive pre-filled from `PROFILE` and stay editable so a typo can be corrected. School is optional. Subjects are derived from the grade and medium chosen on `SETUP`. |
+| `RESULT` | Score, points, time, grade rank, badges, and a shareable PNG score card. Correct answers are deliberately not shown. |
+| `REGISTRATION` | District, subjects, class type and start intent only. Nothing captured on `PROFILE` is asked again. Subjects are derived from the grade and medium chosen on `SETUP`. |
 | `SUCCESS` | Confirmation, score recap and the EDUS link list. |
 
 ### Lead capture is the point
@@ -257,7 +257,31 @@ holds.
 - **Answers are hidden on purpose.** Showing them at a live booth lets students
   pass them around and destroys the leaderboard. Release them after the
   leaderboard closes.
-- **The score card carries no personal data**: no name, no phone, no school.
+### The share card
+
+The PNG a student takes away carries their **name, school and grade** alongside
+the score, plus **www.edus.lk** and the hotline, so a card shared to WhatsApp or
+Facebook advertises EDUS on its own. The phone number is never on the card. A
+student who skipped the school field simply has no school line.
+
+This is a deliberate business decision by the CEO and it overrides the campaign
+config, which listed `full_name` and `school` under `share_card_never_include`.
+The trade is reach against putting a minor's name and school on an image they
+may share publicly. If that trade is ever revisited, the card is built in
+`ScoreCard` in `src/components/challenge/screens/ResultScreen.tsx`.
+
+**Sharing picks the best route the device supports:**
+
+| Device can | What happens |
+| --- | --- |
+| Share image with text | WhatsApp or Facebook receives the card and the caption together |
+| Share image only | Caption is copied to the clipboard first, and the student is told to paste it |
+| No share sheet, typically desktop | Image is saved and the caption copied, so both can be posted by hand |
+
+The caption carries the student's name, school, score, grade, points, time, the
+website, the hotline and `#edus #edus_classes #YGCIF26`. It is written in the
+language the student chose; the "from {school}" connector differs per language
+and lives in `dictionary.ts`, not in the component.
 
 ---
 

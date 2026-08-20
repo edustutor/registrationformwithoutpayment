@@ -100,7 +100,14 @@ const en = {
     download: "Download your result",
     downloading: "Preparing...",
     downloadFailed: "Could not create the image. Please screenshot this screen instead.",
-    share: "Share",
+    share: "Share your result",
+    captionCopied: "Caption copied. Paste it with the image when you share.",
+    savedAndCopied: "Image saved and caption copied. Paste the caption when you post.",
+    shareCaption:
+      "{name}{school} scored {correct}/{total} in the EDUS 60-Second Challenge at YGC Innovation Festival 2026.\n{grade} · {score} points · {seconds}s\n\nThink you can beat that?\nLearn with EDUS: {website}\nHotline: {hotline}\n\n{hashtags}",
+    shareTitle: "EDUS 60-Second Challenge",
+    // Injected as {school} only when a school was given.
+    shareCaptionSchool: " from {school}",
     continueCta: "Continue to Registration",
     tiers: {
       CHAMPION: "EDUS Champion!",
@@ -126,7 +133,6 @@ const en = {
   registration: {
     title: "What would you like to improve next?",
     subtitle: "Tell us where to send your result and we will help you pick the right class.",
-    sectionContact: "Your details",
     sectionInterest: "Your learning plan",
     nameLabel: "Student full name",
     namePlaceholder: "e.g. A. Nimal",
@@ -267,7 +273,13 @@ const ta: Dictionary = {
     download: "உங்கள் முடிவைப் பதிவிறக்குக",
     downloading: "தயாராகிறது...",
     downloadFailed: "படத்தை உருவாக்க முடியவில்லை. இந்தத் திரையை screenshot எடுங்கள்.",
-    share: "பகிர்க",
+    share: "உங்கள் முடிவைப் பகிரவும்",
+    captionCopied: "எழுத்து நகலெடுக்கப்பட்டது. படத்துடன் சேர்த்து ஒட்டுங்கள்.",
+    savedAndCopied: "படம் சேமிக்கப்பட்டது, எழுத்து நகலெடுக்கப்பட்டது. பகிரும்போது ஒட்டுங்கள்.",
+    shareCaption:
+      "{name}{school} YGC Innovation Festival 2026 இல் EDUS 60-விநாடி சவாலில் {correct}/{total} பெற்றார்.\n{grade} · {score} புள்ளிகள் · {seconds}s\n\nஉங்களால் இதை முறியடிக்க முடியுமா?\nEDUS உடன் கற்கவும்: {website}\nHotline: {hotline}\n\n{hashtags}",
+    shareTitle: "EDUS 60-விநாடி சவால்",
+    shareCaptionSchool: " ({school})",
     continueCta: "பதிவுக்குத் தொடர்க",
     tiers: {
       CHAMPION: "EDUS சாம்பியன்!",
@@ -293,7 +305,6 @@ const ta: Dictionary = {
   registration: {
     title: "அடுத்ததாக எந்தப் பாடத்தில் முன்னேற விரும்புகிறீர்கள்?",
     subtitle: "உங்கள் முடிவை எங்கே அனுப்புவது எனச் சொல்லுங்கள். சரியான வகுப்பைத் தெரிவுசெய்ய உதவுவோம்.",
-    sectionContact: "உங்கள் விவரங்கள்",
     sectionInterest: "உங்கள் கற்றல் திட்டம்",
     nameLabel: "மாணவர் முழுப் பெயர்",
     namePlaceholder: "உதாரணம்: அ. நிமல்",

@@ -71,7 +71,7 @@ export async function pushLeadToCrm(lead: CrmLead): Promise<boolean> {
   }
 
   const body = new URLSearchParams({
-    name: lead.fullName,
+    name: lead.fullName || "YGC Participant",
     phonenumber: lead.phone,
     assigned: ASSIGNED_STAFF_ID,
     status: LEAD_STATUS_ID,

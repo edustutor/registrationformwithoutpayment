@@ -12,6 +12,7 @@ export type ProfileValue = {
   fullName: string;
   phone: string;
   contactOwner: string;
+  school: string;
   consent: boolean;
 };
 
@@ -19,6 +20,7 @@ export const EMPTY_PROFILE: ProfileValue = {
   fullName: "",
   phone: "",
   contactOwner: "STUDENT",
+  school: "",
   consent: false,
 };
 
@@ -139,6 +141,17 @@ export function ProfileScreen({
                 className="rounded-l-none"
               />
             </div>
+          </Field>
+
+          <Field label={t.registration.schoolLabel} htmlFor="profileSchool">
+            <TextInput
+              id="profileSchool"
+              name="school"
+              maxLength={150}
+              placeholder={t.registration.schoolPlaceholder}
+              value={value.school}
+              onChange={(event) => update({ school: event.target.value })}
+            />
           </Field>
 
           <Field label={t.registration.contactOwnerLabel} required>

@@ -60,6 +60,8 @@ export const leadSchema = z.object({
   fullName: z.string().trim().min(2).max(100),
   phone: phoneField,
   contactOwner: z.enum(contactOwnerIds),
+  // Optional: plenty of festival visitors will not want to give a school.
+  school: z.string().trim().max(150).default(""),
   consent: z.literal(true),
 });
 
@@ -79,6 +81,7 @@ export const quizStartSchema = z
         fullName: z.string().trim().min(2).max(100),
         phone: phoneField,
         contactOwner: z.enum(contactOwnerIds),
+        school: z.string().trim().max(150).default(""),
         consent: z.literal(true),
       })
       .optional(),
@@ -114,15 +117,15 @@ export const quizSubmitSchema = z.object({
     .length(QUESTION_COUNT),
 });
 
+/**
+ * Only what the last screen actually asks. Name, phone, contact owner and
+ * school were captured on the first screen and are read back from the stored
+ * row, so a student is never asked for the same thing twice.
+ */
 export const registrationSchema = z.object({
   sessionId,
   attemptId: z.string().uuid(),
   language: z.enum(["en", "ta"]),
-  fullName: z.string().trim().min(2).max(100),
-  phone: phoneField,
-  contactOwner: z.enum(contactOwnerIds),
-  // Optional: plenty of festival visitors will not want to give a school.
-  school: z.string().trim().max(150).default(""),
   district: z.enum(districtNames),
   subjects: z.array(z.string().trim().min(1)).min(1).max(12),
   classType: z.enum(classTypeIds),

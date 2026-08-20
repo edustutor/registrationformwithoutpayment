@@ -6,7 +6,6 @@ import { BookOpen, CheckCircle } from "@phosphor-icons/react";
 
 import {
   CLASS_TYPES,
-  CONTACT_OWNERS,
   DISTRICTS,
   START_INTENTS,
   gradeLabel,
@@ -16,15 +15,15 @@ import {
   type LanguageCode,
 } from "@/lib/catalog";
 import type { Dictionary } from "@/lib/dictionary";
-import { normalisePhone } from "@/lib/schemas";
 import type { ChallengeResult } from "@/lib/types";
-import { ErrorBanner, Field, OptionCard, PrimaryButton, ScreenShell, SelectInput, TextInput } from "../ui";
+import { ErrorBanner, Field, OptionCard, PrimaryButton, ScreenShell, SelectInput } from "../ui";
 
+/**
+ * Only what this screen still asks. Name, phone, contact owner and school were
+ * captured on the first screen, so re-asking here would make a student type
+ * the same thing twice.
+ */
 export type RegistrationValue = {
-  fullName: string;
-  phone: string;
-  contactOwner: string;
-  school: string;
   district: string;
   subjects: string[];
   classType: string;
@@ -32,10 +31,6 @@ export type RegistrationValue = {
 };
 
 export const EMPTY_REGISTRATION: RegistrationValue = {
-  fullName: "",
-  phone: "",
-  contactOwner: "STUDENT",
-  school: "",
   district: "Jaffna",
   subjects: [],
   classType: "",
@@ -75,9 +70,6 @@ export function RegistrationScreen({
 
   function validate(): Errors {
     const found: Errors = {};
-    if (value.fullName.trim().length < 2) found.fullName = t.registration.errors.name;
-    if (!normalisePhone(value.phone)) found.phone = t.registration.errors.phone;
-    if (!value.contactOwner) found.contactOwner = t.registration.errors.contactOwner;
     if (value.subjects.length === 0) found.subjects = t.registration.errors.subjects;
     if (!value.classType) found.classType = t.registration.errors.classType;
     if (!value.startIntent) found.startIntent = t.registration.errors.startIntent;
@@ -160,95 +152,7 @@ export function RegistrationScreen({
             />
           </div>
 
-          <SectionTitle>{t.registration.sectionContact}</SectionTitle>
-
-          <div className="space-y-6">
-            <Field label={t.registration.nameLabel} htmlFor="fullName" required error={errors.fullName}>
-              <TextInput
-                id="fullName"
-                name="fullName"
-                autoComplete="name"
-                maxLength={100}
-                placeholder={t.registration.namePlaceholder}
-                value={value.fullName}
-                invalid={Boolean(errors.fullName)}
-                onChange={(event) => update({ fullName: event.target.value })}
-              />
-            </Field>
-
-            <Field
-              label={t.registration.phoneLabel}
-              htmlFor="phone"
-              required
-              error={errors.phone}
-              hint={t.registration.phoneHint}
-            >
-              <div className="flex">
-                <span className="flex items-center rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 px-4 font-bold text-slate-600">
-                  +94
-                </span>
-                <TextInput
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel-national"
-                  placeholder={t.registration.phonePlaceholder}
-                  value={value.phone}
-                  invalid={Boolean(errors.phone)}
-                  onChange={(event) => update({ phone: event.target.value })}
-                  className="rounded-l-none"
-                />
-              </div>
-            </Field>
-
-            <Field label={t.registration.contactOwnerLabel} required error={errors.contactOwner}>
-              <div className="grid grid-cols-2 gap-3" data-invalid={Boolean(errors.contactOwner)}>
-                {CONTACT_OWNERS.map((owner) => (
-                  <OptionCard
-                    key={owner.id}
-                    name="contactOwner"
-                    value={owner.id}
-                    checked={value.contactOwner === owner.id}
-                    onChange={() => update({ contactOwner: owner.id })}
-                    className="justify-center py-3.5 text-center"
-                  >
-                    <span className="text-sm font-bold text-slate-700">{owner.label[language]}</span>
-                  </OptionCard>
-                ))}
-              </div>
-            </Field>
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Field label={t.registration.schoolLabel} htmlFor="school">
-                <TextInput
-                  id="school"
-                  name="school"
-                  maxLength={150}
-                  placeholder={t.registration.schoolPlaceholder}
-                  value={value.school}
-                  onChange={(event) => update({ school: event.target.value })}
-                />
-              </Field>
-
-              <Field label={t.registration.districtLabel} htmlFor="district" required>
-                <SelectInput
-                  id="district"
-                  name="district"
-                  value={value.district}
-                  onChange={(event) => update({ district: event.target.value })}
-                >
-                  {DISTRICTS.map((district) => (
-                    <option key={district.en} value={district.en}>
-                      {language === "ta" ? `${district.ta} (${district.en})` : district.en}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
-            </div>
-          </div>
-
-          <SectionTitle className="mt-10">{t.registration.sectionInterest}</SectionTitle>
+          <SectionTitle>{t.registration.sectionInterest}</SectionTitle>
 
           <div className="space-y-6">
             <Field
@@ -285,6 +189,21 @@ export function RegistrationScreen({
                   );
                 })}
               </div>
+            </Field>
+
+            <Field label={t.registration.districtLabel} htmlFor="district" required>
+              <SelectInput
+                id="district"
+                name="district"
+                value={value.district}
+                onChange={(event) => update({ district: event.target.value })}
+              >
+                {DISTRICTS.map((district) => (
+                  <option key={district.en} value={district.en}>
+                    {language === "ta" ? `${district.ta} (${district.en})` : district.en}
+                  </option>
+                ))}
+              </SelectInput>
             </Field>
 
             <Field label={t.registration.classTypeLabel} required error={errors.classType}>
