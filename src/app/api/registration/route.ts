@@ -49,11 +49,14 @@ export async function POST(req: Request) {
       Grade: values.grade || "",
       Medium: values.medium || "",
       Subjects: Array.isArray(values.subjects) ? values.subjects.join(", ") : "",
+      'Class Type': Array.isArray(values.classType) ? values.classType.join(", ") : (values.classType || ""),
+      'Start Date': values.startDate || "",
       'Parent Name': values.parentName || "",
       'Parent Phone': formatPhone(values.parentPhone),
       Address: values.address || "",
       District: values.district || "",
-      Status: step === 3 ? "Completed" : `Step ${step}`,
+      'Quiz Score': values.quizScore !== undefined ? `${values.quizScore}/5` : "",
+      Status: step === 99 ? "Completed" : `Step ${step}`,
     };
 
     try {
@@ -87,8 +90,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // Step 3 (Final Submission): Add to Perfex CRM Leads
-    if (step === 3) {
+    // Step 99 (Final Submission): Add to Perfex CRM Leads
+    if (step === 99) {
       if (!process.env.PERFEX_API_TOKEN) {
         console.warn("⚠️ Skipping Perfex CRM push because PERFEX_API_TOKEN is missing in Vercel Environment Variables!");
       } else {
@@ -101,11 +104,14 @@ export async function POST(req: Request) {
           `Grade: ${values.grade || 'N/A'}`,
           `Medium: ${values.medium || 'N/A'}`,
           `Subjects: ${(values.subjects || []).join(', ') || 'N/A'}`,
+          `Class Type: ${Array.isArray(values.classType) ? values.classType.join(', ') : (values.classType || 'N/A')}`,
+          `Start Date: ${values.startDate || 'N/A'}`,
           `Parent Name: ${values.parentName || 'N/A'}`,
           `Parent Phone: ${formatPhone(values.parentPhone) || 'N/A'}`,
           `Address: ${values.address || 'N/A'}`,
           `District: ${values.district || 'N/A'}`,
-          `Language: ${values.language || 'English'}`
+          `Language: ${values.language || 'English'}`,
+          `Quiz Score: ${values.quizScore !== undefined ? values.quizScore + '/5' : 'N/A'}`
         ].join('\n');
 
         const leadData = new URLSearchParams({
