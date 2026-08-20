@@ -9,7 +9,7 @@ import type { QuizStartResponse } from "@/lib/types";
 import { apiError, issuesToMessages } from "@/server/api-response";
 import { createQuizToken } from "@/server/quiz-token";
 import { QuestionBankError, selectQuestions, toClientQuestion } from "@/server/question-bank";
-import { upsertRegistrationRow } from "@/server/sheets";
+import { CAMPAIGN_CODE, LEAD_SOURCE, upsertRegistrationRow } from "@/server/sheets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { sessionId, language, grade, medium, alTrack } = parsed.data;
+  const { sessionId, language, grade, medium, alTrack, profile } = parsed.data;
   const trackId = resolveTrackId(grade as GradeId, (alTrack ?? null) as AlTrackId | null);
   if (!trackId) {
     return apiError("VALIDATION_FAILED", "A/L students must choose a stream.", 400);
@@ -51,8 +51,15 @@ export async function POST(request: Request) {
 
     // Attach the grade to the lead captured on the first screen, so a student
     // who abandons mid-quiz is still a lead the sales team can act on rather
-    // than just a name and a number. Written before the clock is stamped, so
-    // the time this takes never comes out of the student's 60 seconds.
+    // than just a name and a number.
+    //
+    // The browser also re-sends the profile. If the lead write failed and was
+    // let through, this recreates the row with the contact details; if it
+    // succeeded, the same values are written again harmlessly. One failed
+    // write is repaired by the next step instead of losing the student.
+    //
+    // Written before the clock is stamped, so the time this takes never comes
+    // out of the student's 60 seconds.
     try {
       await upsertRegistrationRow(sessionId, {
         "Attempt Id": attemptId,
@@ -61,6 +68,17 @@ export async function POST(request: Request) {
         Grade: gradeLabel(grade),
         "A/L Track": alTrack ? trackLabel(alTrack) : "",
         Medium: medium,
+        ...(profile
+          ? {
+              "Captured At": new Date().toISOString(),
+              "Student Name": profile.fullName,
+              "Student Phone": profile.phone,
+              "Contact Owner": profile.contactOwner,
+              Consent: "Yes",
+              Source: LEAD_SOURCE,
+              Campaign: CAMPAIGN_CODE,
+            }
+          : {}),
       });
     } catch (error) {
       // Never block the challenge on storage. The submit handler writes the

@@ -18,6 +18,7 @@ import { JWT } from "google-auth-library";
 
 import { compareForRank, type RankableAttempt } from "@/lib/scoring";
 import { getServerEnv } from "./env";
+import { withRetry } from "./retry";
 
 export const REGISTRATION_HEADERS = [
   "Session Id",
@@ -92,7 +93,7 @@ function loadDoc(): Promise<GoogleSpreadsheet> {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     const doc = new GoogleSpreadsheet(env.googleSheetId, auth);
-    await doc.loadInfo();
+    await withRetry("loadInfo", () => doc.loadInfo());
     return doc;
   })();
 
@@ -109,11 +110,6 @@ function loadDoc(): Promise<GoogleSpreadsheet> {
  * Confirms a tab is ready to write to. Adds headers to a genuinely empty tab,
  * accepts a tab that already carries every header we need (extra columns are
  * fine), and refuses anything else.
- *
- * A long-lived server instance caches the spreadsheet's grid metadata, so a
- * tab widened after that instance connected still looks narrow to it. Rather
- * than fail a real submission over stale metadata, a mismatch triggers one
- * refresh and a re-check before giving up.
  */
 async function ensureHeaders(
   sheet: GoogleSpreadsheetWorksheet,
@@ -121,27 +117,21 @@ async function ensureHeaders(
 ): Promise<void> {
   async function currentHeaders(): Promise<string[]> {
     try {
-      await sheet.loadHeaderRow();
+      await withRetry("loadHeaderRow", () => sheet.loadHeaderRow());
       return sheet.headerValues.filter(Boolean);
     } catch {
       return [];
     }
   }
 
-  let existing = await currentHeaders();
+  const existing = await currentHeaders();
 
   if (existing.length === 0) {
-    await sheet.setHeaderRow([...headers]);
+    await withRetry("setHeaderRow", () => sheet.setHeaderRow([...headers]));
     return;
   }
 
-  let missing = headers.filter((header) => !existing.includes(header));
-  if (missing.length === 0) return;
-
-  const doc = await loadDoc();
-  await doc.loadInfo();
-  existing = await currentHeaders();
-  missing = headers.filter((header) => !existing.includes(header));
+  const missing = headers.filter((header) => !existing.includes(header));
   if (missing.length === 0) return;
 
   throw new SheetSetupError(
@@ -158,18 +148,19 @@ async function ensureHeaders(
  * quiz attempts tab was removed by hand.
  *
  * So every accessor gets one retry: refresh the spreadsheet metadata and look
- * again before giving up.
+ * again before giving up. This is separate from withRetry, which handles rate
+ * limits; this one handles a tab that moved underneath us.
  */
 async function withRefreshRetry<T>(
-  resolve: (doc: GoogleSpreadsheet, isRetry: boolean) => Promise<T>,
+  resolve: (doc: GoogleSpreadsheet) => Promise<T>,
 ): Promise<T> {
   try {
-    return await resolve(await loadDoc(), false);
+    return await resolve(await loadDoc());
   } catch (firstError) {
     console.warn("[sheets] retrying after refreshing spreadsheet metadata", firstError);
     const doc = await loadDoc();
-    await doc.loadInfo();
-    return resolve(doc, true);
+    await withRetry("loadInfo(refresh)", () => doc.loadInfo());
+    return resolve(doc);
   }
 }
 
@@ -202,11 +193,13 @@ export async function getQuizAttemptsSheet(): Promise<GoogleSpreadsheetWorksheet
 
     // Creating a tab is additive, so it is safe to do automatically. This is
     // what puts the tab back if someone deletes it mid-event.
-    return doc.addSheet({
-      title,
-      headerValues: [...QUIZ_ATTEMPT_HEADERS],
-      gridProperties: { rowCount: 10000, columnCount: QUIZ_ATTEMPT_HEADERS.length },
-    });
+    return withRetry("addSheet", () =>
+      doc.addSheet({
+        title,
+        headerValues: [...QUIZ_ATTEMPT_HEADERS],
+        gridProperties: { rowCount: 10000, columnCount: QUIZ_ATTEMPT_HEADERS.length },
+      }),
+    );
   });
 }
 
@@ -214,65 +207,92 @@ export type RegistrationRow = Partial<Record<(typeof REGISTRATION_HEADERS)[numbe
 export type QuizAttemptRow = Partial<Record<(typeof QUIZ_ATTEMPT_HEADERS)[number], string | number>>;
 
 /**
- * Writes the participant row. Creates it on first write and updates it in
- * place afterwards, so one student is always exactly one row whether they
- * finish the quiz, the registration, or both. Returns the row's values after
- * the save, so a caller can read fields written by an earlier step.
+ * Creates the participant row without reading the sheet first.
+ *
+ * The lead screen is always the first write for a session, so there is nothing
+ * to look up. Skipping the read saves one API call per student, which is real
+ * headroom when the quota is 60 reads per minute and a queue is forming.
+ */
+export async function createRegistrationRow(
+  sessionId: string,
+  values: RegistrationRow,
+): Promise<void> {
+  const sheet = await getRegistrationsSheet();
+  await withRetry("addRow(registration)", async () => {
+    await sheet.addRow({ "Session Id": sessionId, ...values });
+  });
+}
+
+/**
+ * Updates the participant row, creating it if the earlier write never landed.
+ * Later steps re-send what they know, so one failed write is repaired by the
+ * next step rather than lost.
  */
 export async function upsertRegistrationRow(
   sessionId: string,
   values: RegistrationRow,
 ): Promise<Record<string, string>> {
   const sheet = await getRegistrationsSheet();
-  const rows = await sheet.getRows();
+  const rows = await withRetry("getRows(registration)", () => sheet.getRows());
   const existing = rows.find((row) => row.get("Session Id") === sessionId);
 
   if (existing) {
     existing.assign(values);
-    await existing.save();
+    await withRetry("saveRow(registration)", () => existing.save());
     return existing.toObject() as Record<string, string>;
   }
 
-  const created = await sheet.addRow({ "Session Id": sessionId, ...values });
+  const created = await withRetry("addRow(registration)", () =>
+    sheet.addRow({ "Session Id": sessionId, ...values }),
+  );
   return created.toObject() as Record<string, string>;
 }
 
 export async function appendQuizAttemptRows(rows: QuizAttemptRow[]): Promise<void> {
   if (rows.length === 0) return;
   const sheet = await getQuizAttemptsSheet();
-  await sheet.addRows(rows as Record<string, string | number>[]);
+  await withRetry("addRows(attempts)", async () => {
+    await sheet.addRows(rows as Record<string, string | number>[]);
+  });
 }
 
 export type RankResult = { rank: number; rankOutOf: number };
 
 /**
- * Ranks an attempt inside its own grade or A/L track, before that attempt has
- * been written. Counting how many stored attempts beat this one is exact and
- * saves a second write, which matters when a whole festival queue submits at
- * once and the Sheets write quota is the limit.
+ * Ranks an attempt and saves it in a single pass over the sheet.
+ *
+ * Ranking and updating both need every row in the grade, so doing them
+ * together costs one read instead of two. At a busy booth that halves the read
+ * pressure of a submission.
  *
  * Grades are never ranked against each other, because a Grade 3 paper is not a
  * Grade 11 paper. Tamil and English medium share a partition, since both sit
  * identical underlying questions.
  */
-export async function rankAgainstPeers(
+export async function rankAndSaveResult(
+  sessionId: string,
   grade: string,
   alTrack: string,
-  sessionId: string,
   attempt: RankableAttempt,
+  buildValues: (rank: number) => RegistrationRow,
 ): Promise<RankResult> {
   const sheet = await getRegistrationsSheet();
-  const rows = await sheet.getRows();
+  const rows = await withRetry("getRows(rank)", () => sheet.getRows());
 
   let ahead = 0;
   let total = 1; // this attempt
+  let own: (typeof rows)[number] | undefined;
 
   for (const row of rows) {
+    if (row.get("Session Id") === sessionId) {
+      own = row;
+      // A retake in the same session replaces its own earlier row, so that row
+      // must not be counted as a competitor.
+      continue;
+    }
+
     if (row.get("Grade") !== grade) continue;
     if ((row.get("A/L Track") ?? "") !== alTrack) continue;
-    // A retake in the same session replaces its own earlier row, so that row
-    // must not be counted as a competitor.
-    if (row.get("Session Id") === sessionId) continue;
 
     const correctCount = Number(row.get("Correct Count"));
     if (!Number.isFinite(correctCount) || row.get("Correct Count") === "") continue;
@@ -289,5 +309,17 @@ export async function rankAgainstPeers(
     if (compareForRank(peer, attempt) < 0) ahead++;
   }
 
-  return { rank: ahead + 1, rankOutOf: total };
+  const rank = ahead + 1;
+  const values = buildValues(rank);
+
+  if (own) {
+    own.assign(values);
+    await withRetry("saveRow(result)", () => own.save());
+  } else {
+    await withRetry("addRow(result)", async () => {
+      await sheet.addRow({ "Session Id": sessionId, ...values });
+    });
+  }
+
+  return { rank, rankOutOf: total };
 }

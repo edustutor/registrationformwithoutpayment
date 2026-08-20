@@ -71,6 +71,17 @@ export const quizStartSchema = z
     grade: z.enum(gradeIds),
     medium: z.enum(["TAMIL", "ENGLISH"]),
     alTrack: z.enum(alTrackIds).nullish(),
+    // The browser re-sends the profile it already captured. If the lead write
+    // failed, this repairs it; if it succeeded, it is written again harmlessly.
+    // Never trust it without consent, same rule as the lead screen.
+    profile: z
+      .object({
+        fullName: z.string().trim().min(2).max(100),
+        phone: phoneField,
+        contactOwner: z.enum(contactOwnerIds),
+        consent: z.literal(true),
+      })
+      .optional(),
   })
   .refine((value) => value.grade !== "AL" || Boolean(value.alTrack), {
     message: "A/L students must choose a stream before starting.",

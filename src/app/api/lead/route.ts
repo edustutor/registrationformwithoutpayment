@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { leadSchema } from "@/lib/schemas";
 import { apiError, issuesToMessages } from "@/server/api-response";
-import { CAMPAIGN_CODE, LEAD_SOURCE, upsertRegistrationRow } from "@/server/sheets";
+import { CAMPAIGN_CODE, LEAD_SOURCE, createRegistrationRow } from "@/server/sheets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,13 +11,15 @@ export const dynamic = "force-dynamic";
  * Captures the lead before the challenge begins.
  *
  * Lead collection is the point of the whole funnel, so the student's name and
- * number are written to the sheet the moment they are given. If the student
- * then closes the tab mid-quiz, EDUS still has someone to call. Everything
- * after this point updates the same row, keyed by session id.
+ * number are written the moment they are given. This is always the first write
+ * for a session, so it creates the row directly rather than reading the sheet
+ * to look for one, which saves an API call per student.
  *
- * Unlike the quiz and registration handlers, a failure here is reported to the
- * browser: there is nothing else in flight to salvage, and the student can
- * simply press the button again.
+ * If the write fails even after retries, the student is NOT blocked. They are
+ * let through and the browser re-sends the same details when the quiz starts,
+ * which recreates the row. Blocking a student at the first screen because
+ * Google is rate limiting would cost the very lead this screen exists to
+ * capture. `stored` tells the browser which happened.
  */
 export async function POST(request: Request) {
   let body: unknown;
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
   const input = parsed.data;
 
   try {
-    await upsertRegistrationRow(input.sessionId, {
+    await createRegistrationRow(input.sessionId, {
       "Captured At": new Date().toISOString(),
       Status: "PROFILE_CAPTURED",
       Language: input.language,
@@ -51,10 +53,9 @@ export async function POST(request: Request) {
       Source: LEAD_SOURCE,
       Campaign: CAMPAIGN_CODE,
     });
+    return NextResponse.json({ success: true, stored: true });
   } catch (error) {
-    console.error("[lead] sheet write failed", error);
-    return apiError("STORAGE_ERROR", "We could not save your details. Please try again.", 502);
+    console.error("[lead] sheet write failed, letting the student continue", error);
+    return NextResponse.json({ success: true, stored: false });
   }
-
-  return NextResponse.json({ success: true });
 }

@@ -132,15 +132,6 @@ export default function ChallengeApp() {
         return;
       }
 
-      // Carry the details forward so the registration form arrives pre-filled
-      // and the student never types their name and number twice.
-      setRegistration((current) => ({
-        ...current,
-        fullName: profile.fullName,
-        phone: profile.phone,
-        contactOwner: profile.contactOwner,
-      }));
-
       goTo("SETUP");
     } catch (error) {
       console.error("[challenge] lead capture failed", error);
@@ -166,6 +157,14 @@ export default function ChallengeApp() {
           grade: setup.grade as GradeId,
           medium: setup.medium as MediumId,
           alTrack: (setup.alTrack || null) as AlTrackId | null,
+          // Re-sent so a lead write that failed on the previous screen is
+          // repaired here rather than lost.
+          profile: {
+            fullName: profile.fullName,
+            phone: profile.phone,
+            contactOwner: profile.contactOwner,
+            consent: profile.consent,
+          },
         }),
       });
 

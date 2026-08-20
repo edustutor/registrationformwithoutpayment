@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "setup:sheets": "node scripts/setup-sheets.mjs",
-    "check": "tsc --noEmit && eslint"
+    "check": "tsc --noEmit && eslint && npm run verify:retry",
+    "verify:retry": "node --experimental-strip-types --no-warnings scripts/verify-retry.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
